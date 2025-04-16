@@ -8,21 +8,22 @@ import org.springframework.web.reactive.function.client.WebClient;
 import com.fasterxml.jackson.databind.JsonNode;
 import reactor.core.publisher.Mono;
 
+import java.util.List;
+
 @RestController
-public class   StationController {
+@RequestMapping("/stations")
+public class StationController {
+
     private final StationService stationService;
 
-    public StationController(StationService stationService)
-    {
+    public StationController(StationService stationService) {
         this.stationService = stationService;
     }
 
-    @GetMapping("/departures")
-    public String getDepartures(@RequestParam String station)
-    {
-        JsonNode departures = stationService.getDepartures(station);
-        System.out.println("Departures for station " + station + ":");
-        System.out.println(departures.toPrettyString());
-        return "Departures fetched and printed to the console!";
+    @GetMapping
+    public List<JsonNode> searchStations(@RequestParam String query) {
+        System.out.println("Query received: " + query); // Debugging
+        return stationService.getStations(query);
     }
+
 }
