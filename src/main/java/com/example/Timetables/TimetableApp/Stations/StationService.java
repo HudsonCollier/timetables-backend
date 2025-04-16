@@ -35,7 +35,7 @@ public class StationService {
         this.objectMapper = objectMapper;
     }
 
-    public List<JsonNode> getStations(String query) {
+    public List<String> getStations(String query) {
 //        List<String> stations = new ArrayList<String>();
         String url = NS_API_URL + "?q=" + query;
         JsonNode response = webClient.get()
@@ -45,9 +45,14 @@ public class StationService {
                 .block();
 
         if (response != null && response.has("payload")) {
-            List<JsonNode> stations = response.get("payload").findValues("lang");
-            return stations;
+            List<JsonNode> stationNodes = response.get("payload").findValues("namen");
+
+            return stationNodes.stream()
+                    .map(namenNode -> namenNode.get("lang").asText())
+                    .filter(Objects::nonNull)
+                    .collect(Collectors.toList());
         }
+
         return new ArrayList<>();
     }
 }

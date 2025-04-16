@@ -21,8 +21,8 @@ public class StationController {
     }
 
     @GetMapping
-    public List<JsonNode> searchStations(@RequestParam String query) {
-        System.out.println("Query received: " + query); // Debugging
+    public List<String> searchStations(@RequestParam String query) {
+        System.out.println("Query received: " + query);
         return stationService.getStations(query);
     }
 
