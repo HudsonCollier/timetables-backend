@@ -1,58 +1,40 @@
 package com.example.Timetables.TimetableApp.trains.models;
+
 import java.util.List;
 import java.util.Objects;
 
 public class TrainInfo {
-    private long number;
-    private String departingStation;
+    private long trainNumber;
+    private String departureStation;
     private String arrivalStation;
-    private String departureTime;    // ISO‑8601 timestamp
-    private String arrivalTime;      // ISO‑8601 timestamp
+    private String direction;
+    private String departureTime;
+    private String arrivalTime;
     private boolean onTime;
     private boolean delayed;
     private boolean cancelled;
-    private int platformNumber;
-    private String delayDuration;
+    private int delayDuration;  // Fixed from String to int
+    private String departurePlatformNumber;
+    private String arrivalPlatformNumber;
+    private List<TrainStop> stops;
+    private String timeUntilDeparture;
 
     public TrainInfo() {}
 
-    public TrainInfo(long number,
-                     String departingStation,
-                     String arrivalStation,
-                     String departureTime,
-                     String arrivalTime,
-                     boolean onTime,
-                     boolean delayed,
-                     boolean cancelled,
-                     int platformNumber,
-                     String delayDuration)
-    {
-        this.number = number;
-        this.departingStation = departingStation;
-        this.arrivalStation = arrivalStation;
-        this.departureTime = departureTime;
-        this.arrivalTime = arrivalTime;
-        this.onTime = onTime;
-        this.delayed = delayed;
-        this.cancelled = cancelled;
-        this.platformNumber = platformNumber;
-        this.delayDuration = delayDuration;
+    public long getTrainNumber() {
+        return trainNumber;
     }
 
-    public long getNumber() {
-        return number;
+    public void setTrainNumber(long trainNumber) {
+        this.trainNumber = trainNumber;
     }
 
-    public void setNumber(long number) {
-        this.number = number;
+    public String getDepartureStation() {
+        return departureStation;
     }
 
-    public String getDepartingStation() {
-        return departingStation;
-    }
-
-    public void setDepartingStation(String departingStation) {
-        this.departingStation = departingStation;
+    public void setDepartureStation(String departureStation) {
+        this.departureStation = departureStation;
     }
 
     public String getArrivalStation() {
@@ -61,6 +43,14 @@ public class TrainInfo {
 
     public void setArrivalStation(String arrivalStation) {
         this.arrivalStation = arrivalStation;
+    }
+
+    public String getDirection() {
+        return direction;
+    }
+
+    public void setDirection(String direction) {
+        this.direction = direction;
     }
 
     public String getDepartureTime() {
@@ -103,36 +93,63 @@ public class TrainInfo {
         this.cancelled = cancelled;
     }
 
-    public int getPlatformNumber() {
-        return platformNumber;
-    }
-
-    public void setPlatformNumber(int platformNumber) {
-        this.platformNumber = platformNumber;
-    }
-
-    public String getDelayDuration() {
+    public int getDelayDuration() {
         return delayDuration;
     }
 
-    public void setDelayDuration(String delayDuration) {
+    public void setDelayDuration(int delayDuration) {
         this.delayDuration = delayDuration;
+    }
+
+    public String getDeparturePlatformNumber() {
+        return departurePlatformNumber;
+    }
+
+    public void setDeparturePlatformNumber(String departurePlatformNumber) {
+        this.departurePlatformNumber = departurePlatformNumber;
+    }
+
+    public String getArrivalPlatformNumber() {
+        return arrivalPlatformNumber;
+    }
+
+    public void setArrivalPlatformNumber(String arrivalPlatformNumber) {
+        this.arrivalPlatformNumber = arrivalPlatformNumber;
+    }
+
+    public List<TrainStop> getStops() {
+        return stops;
+    }
+
+    public void setStops(List<TrainStop> stops) {
+        this.stops = stops;
+    }
+
+    public String getTimeUntilDeparture() {
+        return timeUntilDeparture;
+    }
+
+    public void setTimeUntilDeparture(String timeUntilDeparture) {
+        this.timeUntilDeparture = timeUntilDeparture;
     }
 
 
     @Override
     public String toString() {
         return "TrainInfo{" +
-                "number=" + number +
-                ", departingStation='" + departingStation + '\'' +
+                "trainNumber=" + trainNumber +
+                ", departureStation='" + departureStation + '\'' +
                 ", arrivalStation='" + arrivalStation + '\'' +
+                ", direction='" + direction + '\'' +
                 ", departureTime='" + departureTime + '\'' +
                 ", arrivalTime='" + arrivalTime + '\'' +
                 ", onTime=" + onTime +
                 ", delayed=" + delayed +
                 ", cancelled=" + cancelled +
-                ", platformNumber=" + platformNumber +
-                ", delayDuration='" + delayDuration + '\'' +
+                ", delayDuration=" + delayDuration +  // updated
+                ", departurePlatformNumber='" + departurePlatformNumber + '\'' +
+                ", arrivalPlatformNumber='" + arrivalPlatformNumber + '\'' +
+                ", stops=" + stops +
                 '}';
     }
 
@@ -141,29 +158,25 @@ public class TrainInfo {
         if (this == o) return true;
         if (!(o instanceof TrainInfo)) return false;
         TrainInfo that = (TrainInfo) o;
-        return number == that.number &&
+        return trainNumber == that.trainNumber &&
                 onTime == that.onTime &&
                 delayed == that.delayed &&
                 cancelled == that.cancelled &&
-                platformNumber == that.platformNumber &&
-                Objects.equals(departingStation, that.departingStation) &&
+                delayDuration == that.delayDuration &&  // updated
+                Objects.equals(departureStation, that.departureStation) &&
                 Objects.equals(arrivalStation, that.arrivalStation) &&
+                Objects.equals(direction, that.direction) &&
                 Objects.equals(departureTime, that.departureTime) &&
                 Objects.equals(arrivalTime, that.arrivalTime) &&
-                Objects.equals(delayDuration, that.delayDuration);
+                Objects.equals(departurePlatformNumber, that.departurePlatformNumber) &&
+                Objects.equals(arrivalPlatformNumber, that.arrivalPlatformNumber) &&
+                Objects.equals(stops, that.stops);
     }
 
     @Override
     public int hashCode() {
-        return Objects.hash(number,
-                departingStation,
-                arrivalStation,
-                departureTime,
-                arrivalTime,
-                onTime,
-                delayed,
-                cancelled,
-                platformNumber,
-                delayDuration);
+        return Objects.hash(trainNumber, departureStation, arrivalStation, direction,
+                departureTime, arrivalTime, onTime, delayed, cancelled,
+                delayDuration, departurePlatformNumber, arrivalPlatformNumber, stops); // updated
     }
 }

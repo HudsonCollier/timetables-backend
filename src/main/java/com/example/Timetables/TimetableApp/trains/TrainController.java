@@ -3,6 +3,7 @@ package com.example.Timetables.TimetableApp.trains;
 
 import com.example.Timetables.TimetableApp.trains.models.TrainInfo;
 import com.example.Timetables.TimetableApp.trains.TrainService;
+import org.apache.coyote.Request;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
@@ -23,9 +24,11 @@ public class TrainController {
     @GetMapping
     public ResponseEntity<TrainInfo> getByTrain(
             @RequestParam("fromStation") String fromStation,
+            @RequestParam("toStation") String toStation,
             @RequestParam("trainNumber") long trainNumber
     ) {
-        TrainInfo info = trainService.lookupByTrain(fromStation, trainNumber);
+        // 👇 Fix: order of params must match method signature
+        TrainInfo info = trainService.searchTrip(fromStation, toStation, trainNumber);
         if (info == null) {
             return ResponseEntity.notFound().build();
         }
