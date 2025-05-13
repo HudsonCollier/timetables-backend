@@ -27,7 +27,6 @@ public class TrainController {
             @RequestParam("toStation") String toStation,
             @RequestParam("trainNumber") long trainNumber
     ) {
-        // 👇 Fix: order of params must match method signature
         TrainInfo info = trainService.searchTrip(fromStation, toStation, trainNumber);
         if (info == null) {
             return ResponseEntity.notFound().build();

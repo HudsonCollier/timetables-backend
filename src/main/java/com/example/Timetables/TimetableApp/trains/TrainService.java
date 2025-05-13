@@ -54,7 +54,6 @@ public class TrainService {
             String stopStatus = stop.path("stop").path("status").asText(null);
 
             // Arrival info for train at this stop
-            // Arrival info for train at this stop
             JsonNode arrival = stop.path("arrivals").isEmpty() ? null : stop.path("arrivals").get(0);
             String arrivalTime = null;
             String arrivalPlatform = null;
@@ -71,7 +70,6 @@ public class TrainService {
             }
 
 
-            // Departure info for stop
             // Departure info for stop
             JsonNode departure = stop.path("departures").isEmpty() ? null : stop.path("departures").get(0);
             String departureTime = null;
@@ -109,11 +107,22 @@ public class TrainService {
             trainStops.add(trainStop);
         }
 
-        // Gets the info for the users departure station
         TrainStop departureStop = trainStops.stream()
                 .filter(stop -> stop.getStationCode().equalsIgnoreCase(departingStation))
                 .findFirst()
                 .orElse(null);
+
+        TrainStop arrivalStop = trainStops.stream()
+                .filter(stop -> stop.getStationCode().equalsIgnoreCase(arrivalStation))
+                .findFirst()
+                .orElse(null);
+
+        if (departureStop == null || arrivalStop == null) {
+            System.err.println("❌ Invalid station codes: from=" + departingStation + ", to=" + arrivalStation);
+            return null;
+        }
+
+
         String departureTimeFromUsersDepStation = departureStop.getDepartureTime();
         ZonedDateTime zdt = ZonedDateTime.parse(departureTimeFromUsersDepStation, DateTimeFormatter.ofPattern("yyyy-MM-dd'T'HH:mm:ssZ"));
         String formattedDepartureTime = zdt.format(DateTimeFormatter.ofPattern("HH:mm"));
@@ -135,14 +144,8 @@ public class TrainService {
             isOnTime = true;
         }
 
-
         String depPlatNum = departureStop.getDeparturePlatform();
 
-        // Retrieves the info for the users arrival station
-        TrainStop arrivalStop = trainStops.stream()
-                .filter(stop -> stop.getStationCode().equalsIgnoreCase(arrivalStation))
-                .findFirst()
-                .orElse(null);
         String arrivalPlatNum = arrivalStop.getArrivalPlatform();
         String tripsArrivalTime = arrivalStop.getArrivalTime();
         ZonedDateTime zdt2 = ZonedDateTime.parse(tripsArrivalTime, DateTimeFormatter.ofPattern("yyyy-MM-dd'T'HH:mm:ssZ"));
