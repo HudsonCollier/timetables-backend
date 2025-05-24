@@ -10,6 +10,7 @@ import java.util.Properties;
 
 @Configuration
 public class EmailConfiguration {
+
     @Value("${spring.mail.username}")
     private String emailUsername;
 
@@ -32,5 +33,4 @@ public class EmailConfiguration {
 
         return mailSender;
     }
-
 }

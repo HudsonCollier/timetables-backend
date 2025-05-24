@@ -15,11 +15,11 @@ public class EmailService {
 
     public void sendVerificationEmail(String to, String subject, String text) throws MessagingException {
         MimeMessage message = emailSender.createMimeMessage();
-        MimeMessageHelper mimeMessageHelper = new MimeMessageHelper(message, true);
+        MimeMessageHelper helper = new MimeMessageHelper(message, true);
 
-        mimeMessageHelper.setTo(to);
-        mimeMessageHelper.setSubject(subject);
-        mimeMessageHelper.setText(text);
+        helper.setTo(to);
+        helper.setSubject(subject);
+        helper.setText(text, true);
 
         emailSender.send(message);
     }
