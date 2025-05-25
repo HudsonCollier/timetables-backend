@@ -47,7 +47,7 @@ public class User implements UserDetails {
         return List.of();
     }
 
-    //TODO: add proper boolean checks
+    //TODO: add the actual boolean checks that I need
     @Override
     public boolean isAccountNonExpired() {
         return true;
