@@ -1,8 +1,7 @@
-package com.example.Timetables.TimetableApp.trains;
-import com.example.Timetables.TimetableApp.trains.models.TrainInfo;
-import com.example.Timetables.TimetableApp.trains.models.TrainStop;
+package com.example.Timetables.TimetableApp.service;
+import com.example.Timetables.TimetableApp.model.TrainInfo;
+import com.example.Timetables.TimetableApp.model.TrainStop;
 import com.fasterxml.jackson.databind.JsonNode;
-import com.fasterxml.jackson.databind.ObjectMapper;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 import org.springframework.web.reactive.function.client.WebClient;
@@ -12,8 +11,6 @@ import java.time.ZonedDateTime;
 import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Objects;
-import java.util.stream.Collectors;
 
 @Service
 public class TrainService {

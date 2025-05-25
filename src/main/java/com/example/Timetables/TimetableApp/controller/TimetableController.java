@@ -1,6 +1,6 @@
-package com.example.Timetables.TimetableApp.timetable;
-import com.example.Timetables.TimetableApp.stations.Station;
-import com.example.Timetables.TimetableApp.stations.StationService;
+package com.example.Timetables.TimetableApp.controller;
+import com.example.Timetables.TimetableApp.model.TimetableEntry;
+import com.example.Timetables.TimetableApp.service.TimetableService;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RequestMapping;

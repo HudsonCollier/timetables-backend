@@ -1,4 +1,4 @@
-package com.example.Timetables.TimetableApp.trains.models;
+package com.example.Timetables.TimetableApp.model;
 
 public class TrainStop {
     private String stationName;

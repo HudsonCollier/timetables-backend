@@ -1,5 +1,6 @@
-package com.example.Timetables.TimetableApp.stations;
+package com.example.Timetables.TimetableApp.service;
 
+import com.example.Timetables.TimetableApp.model.Station;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import org.springframework.beans.factory.annotation.Value;

@@ -1,4 +1,4 @@
-package com.example.Timetables.TimetableApp.trains.models;
+package com.example.Timetables.TimetableApp.model;
 
 import java.util.List;
 import java.util.Objects;

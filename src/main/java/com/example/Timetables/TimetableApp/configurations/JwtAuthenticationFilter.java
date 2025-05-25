@@ -1,9 +1,7 @@
 package com.example.Timetables.TimetableApp.configurations;
 
-import aj.org.objectweb.asm.Handle;
 import com.example.Timetables.TimetableApp.service.JwtService;
 import io.micrometer.common.lang.NonNull;
-import jakarta.annotation.Nonnull;
 import jakarta.servlet.FilterChain;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.http.HttpServletRequest;

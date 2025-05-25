@@ -1,4 +1,4 @@
-package com.example.Timetables.TimetableApp.timetable;
+package com.example.Timetables.TimetableApp.model;
 
 import java.util.List;
 

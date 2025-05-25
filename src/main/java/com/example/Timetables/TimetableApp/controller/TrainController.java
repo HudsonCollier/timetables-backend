@@ -1,9 +1,8 @@
-package com.example.Timetables.TimetableApp.trains;
+package com.example.Timetables.TimetableApp.controller;
 
 
-import com.example.Timetables.TimetableApp.trains.models.TrainInfo;
-import com.example.Timetables.TimetableApp.trains.TrainService;
-import org.apache.coyote.Request;
+import com.example.Timetables.TimetableApp.model.TrainInfo;
+import com.example.Timetables.TimetableApp.service.TrainService;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 

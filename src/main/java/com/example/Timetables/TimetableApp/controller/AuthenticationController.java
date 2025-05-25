@@ -7,9 +7,7 @@ import com.example.Timetables.TimetableApp.model.User;
 import com.example.Timetables.TimetableApp.responses.LoginResponse;
 import com.example.Timetables.TimetableApp.service.AuthenticationService;
 import com.example.Timetables.TimetableApp.service.JwtService;
-import org.hibernate.metamodel.internal.RuntimeMetamodelsImpl;
 import org.springframework.http.ResponseEntity;
-import org.springframework.stereotype.Controller;
 import org.springframework.web.bind.annotation.*;
 
 @RequestMapping("/auth")
