@@ -32,4 +32,34 @@ public class TrainController {
         }
         return ResponseEntity.ok(info);
     }
+
+
+
+
+
+
+
+    @GetMapping("/test")
+    public ResponseEntity<TrainInfo> testTrainInfoResponse() {
+        TrainInfo info = new TrainInfo();
+        info.setTrainNumber(1234);
+        info.setDepartureStation("UT");
+        info.setArrivalStation("ASD");
+        info.setDirection("North");
+        info.setDepartureTime("12:00");
+        info.setArrivalTime("13:30");
+        info.setOnTime(true);
+        info.setDelayed(false);
+        info.setCancelled(false);
+        info.setDelayDuration(0);
+        info.setDeparturePlatformNumber("5a");
+        info.setArrivalPlatformNumber("8b");
+        info.setTimeUntilDeparture("25 minutes");
+
+        System.out.println("=== Test Endpoint Debug ===");
+        System.out.println("TrainInfo object before returning: " + info); // Use the toString() method
+
+        return ResponseEntity.ok(info);
+    }
+
 }

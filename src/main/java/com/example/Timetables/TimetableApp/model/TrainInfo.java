@@ -1,5 +1,7 @@
 package com.example.Timetables.TimetableApp.model;
 
+import com.fasterxml.jackson.annotation.JsonAutoDetect;
+
 import java.util.List;
 import java.util.Objects;
 
