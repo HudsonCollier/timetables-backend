@@ -53,15 +53,15 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
         try {
             final String jwt = authHeader.substring(7);
             System.out.println("Parsed JWT: " + jwt);
-            final String username = jwtService.extractEmail(jwt);
-            System.out.println("Extracted username: " + username);
+            final String extractedEmail = jwtService.extractEmail(jwt);
+            System.out.println("Extracted username: " + extractedEmail);
 
-            if (username != null && SecurityContextHolder.getContext().getAuthentication() == null) {
-                UserDetails userDetails = this.userDetailsService.loadUserByUsername(username); // ISSUE
+            if (extractedEmail != null && SecurityContextHolder.getContext().getAuthentication() == null) {
+                UserDetails userDetails = this.userDetailsService.loadUserByUsername(extractedEmail); // Actually loading the users email and not username
                 System.out.println("Loaded UserDetails: " + userDetails);
 
                 if (jwtService.isTokenValid(jwt, userDetails)) {
-                    System.out.println("Setting authentication for user: " + username);
+                    System.out.println("Setting authentication for user: " + extractedEmail);
                     UsernamePasswordAuthenticationToken authToken = new UsernamePasswordAuthenticationToken(
                             userDetails,
                             null,
@@ -71,7 +71,7 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
                     authToken.setDetails(new WebAuthenticationDetailsSource().buildDetails(request));
                     SecurityContextHolder.getContext().setAuthentication(authToken);
                 } else {
-                    System.out.println("JWT is NOT valid for: " + username);
+                    System.out.println("JWT is NOT valid for: " + extractedEmail);
                 }
             } else {
                 System.out.println("username is null or context already authenticated.");

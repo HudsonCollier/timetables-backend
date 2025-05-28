@@ -67,14 +67,14 @@ public class TrainController {
 
     @GetMapping("/test")
     public ResponseEntity<String> test(Authentication authentication) {
-        System.out.println("✅ /trains/test endpoint called");
+        System.out.println("/trains/test endpoint called");
         if (authentication == null || !authentication.isAuthenticated()) {
-            System.out.println("❌ Not authenticated");
+            System.out.println(" Not authenticated");
             return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body("Unauthorized");
         }
 
         String response = "Authenticated user: " + authentication.getName();
-        System.out.println("✅ Authenticated as: " + response);
+        System.out.println("Authenticated as: " + response);
         return ResponseEntity.ok(response);
     }
 

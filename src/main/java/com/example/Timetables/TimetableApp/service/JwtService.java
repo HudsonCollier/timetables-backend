@@ -52,7 +52,7 @@ public class JwtService {
         return Jwts
                 .builder()
                 .setClaims(extraClaims)
-                .setSubject(((User) userDetails).getEmail())   // MAY NEED TO CHANGE
+                .setSubject(((User) userDetails).getEmail())  // For time being using the email
                 .setIssuedAt(new Date(System.currentTimeMillis()))
                 .setExpiration(new Date(System.currentTimeMillis() + expiration))
                 .signWith(getSignInKey(), SignatureAlgorithm.HS256)
