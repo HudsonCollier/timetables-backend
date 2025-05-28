@@ -3,7 +3,9 @@ package com.example.Timetables.TimetableApp.controller;
 
 import com.example.Timetables.TimetableApp.model.TrainInfo;
 import com.example.Timetables.TimetableApp.service.TrainService;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.core.Authentication;
 import org.springframework.web.bind.annotation.*;
 
 @RestController
@@ -39,27 +41,43 @@ public class TrainController {
 
 
 
+//    @GetMapping("/test")
+//    public ResponseEntity<TrainInfo> testTrainInfoResponse() {
+//        TrainInfo info = new TrainInfo();
+//        info.setTrainNumber(1234);
+//        info.setDepartureStation("UT");
+//        info.setArrivalStation("ASD");
+//        info.setDirection("North");
+//        info.setDepartureTime("12:00");
+//        info.setArrivalTime("13:30");
+//        info.setOnTime(true);
+//        info.setDelayed(false);
+//        info.setCancelled(false);
+//        info.setDelayDuration(0);
+//        info.setDeparturePlatformNumber("5a");
+//        info.setArrivalPlatformNumber("8b");
+//        info.setTimeUntilDeparture("25 minutes");
+//
+//        System.out.println("=== Test Endpoint Debug ===");
+//        System.out.println("TrainInfo object before returning: " + info);
+//
+//        return ResponseEntity.ok(info);
+//    }
+
+
     @GetMapping("/test")
-    public ResponseEntity<TrainInfo> testTrainInfoResponse() {
-        TrainInfo info = new TrainInfo();
-        info.setTrainNumber(1234);
-        info.setDepartureStation("UT");
-        info.setArrivalStation("ASD");
-        info.setDirection("North");
-        info.setDepartureTime("12:00");
-        info.setArrivalTime("13:30");
-        info.setOnTime(true);
-        info.setDelayed(false);
-        info.setCancelled(false);
-        info.setDelayDuration(0);
-        info.setDeparturePlatformNumber("5a");
-        info.setArrivalPlatformNumber("8b");
-        info.setTimeUntilDeparture("25 minutes");
+    public ResponseEntity<String> test(Authentication authentication) {
+        System.out.println("✅ /trains/test endpoint called");
+        if (authentication == null || !authentication.isAuthenticated()) {
+            System.out.println("❌ Not authenticated");
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body("Unauthorized");
+        }
 
-        System.out.println("=== Test Endpoint Debug ===");
-        System.out.println("TrainInfo object before returning: " + info); // Use the toString() method
-
-        return ResponseEntity.ok(info);
+        String response = "Authenticated user: " + authentication.getName();
+        System.out.println("✅ Authenticated as: " + response);
+        return ResponseEntity.ok(response);
     }
+
+
 
 }

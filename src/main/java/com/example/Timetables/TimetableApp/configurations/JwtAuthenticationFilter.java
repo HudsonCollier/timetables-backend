@@ -42,20 +42,26 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
             @NonNull FilterChain filterChain
     ) throws ServletException, IOException {
         final String authHeader = request.getHeader("Authorization");
+        System.out.println("Auth Header: " + authHeader);
 
         if (authHeader == null || !authHeader.startsWith("Bearer ")) {
+            System.out.println("JWT filter triggered for: " + request.getRequestURI());
             filterChain.doFilter(request, response);
             return;
         }
 
         try {
             final String jwt = authHeader.substring(7);
-            final String userEmail = jwtService.extractUsername(jwt);
+            System.out.println("Parsed JWT: " + jwt);
+            final String username = jwtService.extractEmail(jwt);
+            System.out.println("Extracted username: " + username);
 
-            if (userEmail != null && SecurityContextHolder.getContext().getAuthentication() == null) {
-                UserDetails userDetails = this.userDetailsService.loadUserByUsername(userEmail);
+            if (username != null && SecurityContextHolder.getContext().getAuthentication() == null) {
+                UserDetails userDetails = this.userDetailsService.loadUserByUsername(username); // ISSUE
+                System.out.println("Loaded UserDetails: " + userDetails);
 
                 if (jwtService.isTokenValid(jwt, userDetails)) {
+                    System.out.println("Setting authentication for user: " + username);
                     UsernamePasswordAuthenticationToken authToken = new UsernamePasswordAuthenticationToken(
                             userDetails,
                             null,
@@ -64,7 +70,11 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
 
                     authToken.setDetails(new WebAuthenticationDetailsSource().buildDetails(request));
                     SecurityContextHolder.getContext().setAuthentication(authToken);
+                } else {
+                    System.out.println("JWT is NOT valid for: " + username);
                 }
+            } else {
+                System.out.println("username is null or context already authenticated.");
             }
 
             filterChain.doFilter(request, response);
