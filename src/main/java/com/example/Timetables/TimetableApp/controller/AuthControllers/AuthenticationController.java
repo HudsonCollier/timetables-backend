@@ -1,12 +1,12 @@
-package com.example.Timetables.TimetableApp.controller;
+package com.example.Timetables.TimetableApp.controller.AuthControllers;
 
 import com.example.Timetables.TimetableApp.dto.LoginUserDto;
 import com.example.Timetables.TimetableApp.dto.RegisterUserDto;
 import com.example.Timetables.TimetableApp.dto.VerifyUserDto;
 import com.example.Timetables.TimetableApp.model.User;
 import com.example.Timetables.TimetableApp.responses.LoginResponse;
-import com.example.Timetables.TimetableApp.service.AuthenticationService;
-import com.example.Timetables.TimetableApp.service.JwtService;
+import com.example.Timetables.TimetableApp.service.AuthServices.AuthenticationService;
+import com.example.Timetables.TimetableApp.service.AuthServices.JwtService;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 

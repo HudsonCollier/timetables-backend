@@ -1,4 +1,4 @@
-package com.example.Timetables.TimetableApp.controller;
+package com.example.Timetables.TimetableApp.controller.NonAuthControllers;
 import com.example.Timetables.TimetableApp.model.TimetableEntry;
 import com.example.Timetables.TimetableApp.service.TimetableService;
 import org.springframework.http.ResponseEntity;
@@ -15,12 +15,6 @@ public class TimetableController {
 
     public TimetableController(TimetableService timetableService) {
         this.timetableService = timetableService;
-    }
-
-    // Solely for the timetable screen
-    @GetMapping("/departuresTesting")
-    public ResponseEntity<List<String>> getTimetableForStation(@RequestParam String stationCode) {
-        return ResponseEntity.ok(timetableService.getTimetableForStation(stationCode));
     }
 
     // Solely for the timetable screen

@@ -1,4 +1,4 @@
-package com.example.Timetables.TimetableApp.service;
+package com.example.Timetables.TimetableApp.service.AuthServices;
 
 import com.example.Timetables.TimetableApp.model.User;
 import io.jsonwebtoken.Claims;

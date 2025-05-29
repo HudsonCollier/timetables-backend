@@ -1,21 +1,25 @@
 package com.example.Timetables.TimetableApp.service;
-import com.example.Timetables.TimetableApp.model.TrainInfo;
-import com.example.Timetables.TimetableApp.model.TrainStop;
-import com.fasterxml.jackson.databind.JsonNode;
+import com.example.Timetables.TimetableApp.model.FullStopInfo;
+import com.example.Timetables.TimetableApp.model.FullTripResponse;
+import com.example.Timetables.TimetableApp.model.JourneyDetailsResponse.Stop;
+import com.example.Timetables.TimetableApp.model.JourneyDetailsResponse.TripResponse;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 import org.springframework.web.reactive.function.client.WebClient;
 
 import java.time.Duration;
+import java.time.OffsetDateTime;
+import java.time.ZoneId;
 import java.time.ZonedDateTime;
 import java.time.format.DateTimeFormatter;
-import java.util.ArrayList;
 import java.util.List;
 
 @Service
 public class TrainService {
 
     private final WebClient v2Client;
+    private final ObjectMapper objectMapper;
 
     public TrainService(
             WebClient.Builder webClientBuilder,
@@ -25,160 +29,122 @@ public class TrainService {
                 .baseUrl("https://gateway.apiportal.ns.nl/reisinformatie-api/api/v2")
                 .defaultHeader("Ocp-Apim-Subscription-Key", apiKey)
                 .build();
+
+        this.objectMapper = new ObjectMapper();
     }
 
-    public TrainInfo searchTrip(String departingStation, String arrivalStation, long trainNumber) {
-        JsonNode journeyJson = v2Client.get()
+    public FullTripResponse searchTrip(String departureStationCode, String arrivalStationCode, long trainNumber) {
+        TripResponse response = v2Client.get()
                 .uri(uri -> uri
                         .path("/journey")
                         .queryParam("train", trainNumber)
-                        .queryParam("omitCrowdForecast", true)
+                        .queryParam("departureStation", departureStationCode)
+                        .queryParam("arrivalStation", arrivalStationCode)
+                        .queryParam("omitCrowdForecast", false)
                         .build())
                 .retrieve()
-                .bodyToMono(JsonNode.class)
+                .bodyToMono(TripResponse.class)
                 .block();
 
-        if (journeyJson == null || !journeyJson.has("payload")) {
+        if (response == null || response.getPayload() == null || response.getPayload().getStops() == null) {
             return null;
         }
 
-        JsonNode stops = journeyJson.path("payload").path("stops");
-        String direction = stops.get(0).path("destination").asText(null);
-        List<TrainStop> trainStops = new ArrayList<>();
+        List<Stop> allStops = response.getPayload().getStops();
 
-        for (JsonNode stop : stops) {
-            String stationName = stop.path("stop").path("name").asText(null);
-            String stopStatus = stop.path("stop").path("status").asText(null);
+        int departureIndex = -1;
+        int arrivalIndex = -1;
 
-            // Arrival info for train at this stop
-            JsonNode arrival = stop.path("arrivals").isEmpty() ? null : stop.path("arrivals").get(0);
-            String arrivalTime = null;
-            String arrivalPlatform = null;
-
-            if (arrival != null) {
-                arrivalTime = arrival.path("actualTime").asText(null);
-                if (arrivalTime == null) {
-                    arrivalTime = arrival.path("plannedTime").asText(null); // Fallback
-                }
-                arrivalPlatform = arrival.path("actualTrack").asText(null);
-                if (arrivalPlatform == null) {
-                    arrivalPlatform = arrival.path("plannedTrack").asText(null); // Fallback
-                }
+        // Sets the departure and arrival stop indexes
+        for (int i = 0; i < allStops.size(); i++) {
+            String stationCode = allStops.get(i).getId().split("_")[0];
+            if (stationCode.equalsIgnoreCase(departureStationCode) && departureIndex == -1) {
+                departureIndex = i;
             }
-
-
-            // Departure info for stop
-            JsonNode departure = stop.path("departures").isEmpty() ? null : stop.path("departures").get(0);
-            String departureTime = null;
-            String departurePlatform = null;
-
-            if (departure != null) {
-                departureTime = departure.path("actualTime").asText(null);
-                if (departureTime == null) {
-                    departureTime = departure.path("plannedTime").asText(null); // Fallback
-                }
-                departurePlatform = departure.path("actualTrack").asText(null);
-                if (departurePlatform == null) {
-                    departurePlatform = departure.path("plannedTrack").asText(null); // Fallback
-                }
+            if (stationCode.equalsIgnoreCase(arrivalStationCode)) {
+                arrivalIndex = i;
             }
-
-
-            boolean isCancelled = departure != null && departure.path("cancelled").asBoolean(false);
-            int delay = departure != null ? departure.path("delayInSeconds").asInt(0) : 0;
-
-            String stationId = stop.path("id").asText(); // "UT_0"
-            String stationCode = stationId.split("_")[0]; // "UT_0" to "UT"
-
-            TrainStop trainStop = new TrainStop();
-            trainStop.setStationName(stationName);
-            trainStop.setStatus(stopStatus);
-            trainStop.setArrivalTime(arrivalTime);
-            trainStop.setArrivalPlatform(arrivalPlatform);
-            trainStop.setDepartureTime(departureTime);
-            trainStop.setDeparturePlatform(departurePlatform);
-            trainStop.setCancelled(isCancelled);
-            trainStop.setDelayInSeconds(delay);
-            trainStop.setStationCode(stationCode);
-
-            trainStops.add(trainStop);
         }
 
-        TrainStop departureStop = trainStops.stream()
-                .filter(stop -> stop.getStationCode().equalsIgnoreCase(departingStation))
-                .findFirst()
-                .orElse(null);
-
-        TrainStop arrivalStop = trainStops.stream()
-                .filter(stop -> stop.getStationCode().equalsIgnoreCase(arrivalStation))
-                .findFirst()
-                .orElse(null);
-
-        if (departureStop == null || arrivalStop == null) {
-            System.err.println("❌ Invalid station codes: from=" + departingStation + ", to=" + arrivalStation);
-            return null;
+        if (departureIndex == -1 || arrivalIndex == -1 || departureIndex > arrivalIndex) {
+            throw new IllegalArgumentException("Invalid station codes or stop sequence.");
         }
 
+        Stop departureStop = allStops.get(departureIndex);
+        Stop arrivalStop = allStops.get(arrivalIndex);
 
-        String departureTimeFromUsersDepStation = departureStop.getDepartureTime();
-        ZonedDateTime zdt = ZonedDateTime.parse(departureTimeFromUsersDepStation, DateTimeFormatter.ofPattern("yyyy-MM-dd'T'HH:mm:ssZ"));
-        String formattedDepartureTime = zdt.format(DateTimeFormatter.ofPattern("HH:mm"));
+        // Find all the stops between the departure and arrival stops where the status is STOP
+        List<Stop> relevantStops = allStops.subList(departureIndex + 1, arrivalIndex + 1).stream()
+                .filter(stop -> "STOP".equalsIgnoreCase(stop.getStatus()))
+                .toList();
 
-        boolean isCancelled = departureStop.isCancelled();
-        int delayInSeconds = departureStop.getDelayInSeconds();
 
-        boolean isDelayed = false;
-        boolean isOnTime = false;
+        DateTimeFormatter timeFormatter = DateTimeFormatter.ofPattern("HH:mm");
 
-        if (isCancelled) {
-            isDelayed = false;
-            isOnTime = false;
-        } else if (delayInSeconds > 60) {
-            isDelayed = true;
-            isOnTime = false;
-        } else {
-            isDelayed = false;
-            isOnTime = true;
-        }
+        List<FullStopInfo> stopInfos = relevantStops.stream().map(s -> {
+            FullStopInfo info = new FullStopInfo();
 
-        String depPlatNum = departureStop.getDeparturePlatform();
+            OffsetDateTime arrival = s.getStopArrivalInfo() != null ? s.getStopArrivalInfo().get(0).getStopArrivalTime() : null;
+            OffsetDateTime departure = s.getStopDepartureInfo() != null ? s.getStopDepartureInfo().get(0).getStopDepartureTime() : null;
 
-        String arrivalPlatNum = arrivalStop.getArrivalPlatform();
-        String tripsArrivalTime = arrivalStop.getArrivalTime();
-        ZonedDateTime zdt2 = ZonedDateTime.parse(tripsArrivalTime, DateTimeFormatter.ofPattern("yyyy-MM-dd'T'HH:mm:ssZ"));
-        String formattedArrivalTime = zdt2.format(DateTimeFormatter.ofPattern("HH:mm"));
+            info.setStationName(s.getStopLocation().getStopName());
+            info.setStationCode(s.getId().split("_")[0]);
 
-        ZonedDateTime now = ZonedDateTime.now();
-        Duration duration = Duration.between(now, zdt); // zdt is your parsed departure time
-        long minutesUntilDeparture = duration.toMinutes();
+            info.setArrivalTime(arrival != null
+                    ? arrival.atZoneSameInstant(ZoneId.of("Europe/Amsterdam")).format(timeFormatter)
+                    : null);
 
-        String timeUntilDeparture;
-        if (minutesUntilDeparture > 0) {
-            timeUntilDeparture = minutesUntilDeparture + " minutes";
-        } else if (minutesUntilDeparture == 0) {
-            timeUntilDeparture = "Departing now";
-        } else {
-            timeUntilDeparture = "Departed";
-        }
+            info.setDepartureTime(departure != null
+                    ? departure.atZoneSameInstant(ZoneId.of("Europe/Amsterdam")).format(timeFormatter)
+                    : null);
 
-        TrainInfo tripInfo = new TrainInfo();
-        tripInfo.setTrainNumber(trainNumber);
-        tripInfo.setDepartureStation(departingStation);
-        tripInfo.setArrivalStation(arrivalStation);
-        tripInfo.setDirection(direction);
-        tripInfo.setDepartureTime(formattedDepartureTime);
-        tripInfo.setArrivalTime(formattedArrivalTime);
-        tripInfo.setOnTime(isOnTime);
-        tripInfo.setDelayed(isDelayed);
-        tripInfo.setCancelled(isCancelled);
-        tripInfo.setDelayDuration(delayInSeconds);
-        tripInfo.setDeparturePlatformNumber(depPlatNum);
-        tripInfo.setArrivalPlatformNumber(arrivalPlatNum);
-        tripInfo.setStops(trainStops);
-        tripInfo.setTimeUntilDeparture(timeUntilDeparture);
+            info.setArrivalPlatform(s.getStopArrivalInfo() != null ? s.getStopArrivalInfo().get(0).getPlatformNumber() : null);
+            info.setDeparturePlatform(s.getStopDepartureInfo() != null ? s.getStopDepartureInfo().get(0).getPlatformNumber() : null);
+            info.setCancelled(s.getStopDepartureInfo() != null && s.getStopDepartureInfo().get(0).isCancelled());
+            info.setDelayInSeconds(s.getStopDepartureInfo() != null ? s.getStopDepartureInfo().get(0).getDelayInSeconds() : 0);
+            info.setStatus(s.getStatus());
 
-        return tripInfo;
+            return info;
+        }).toList();
+
+
+        OffsetDateTime departureTime = departureStop.getStopDepartureInfo().get(0).getStopDepartureTime();
+        OffsetDateTime arrivalTime = arrivalStop.getStopArrivalInfo().get(0).getStopArrivalTime();
+
+        ZonedDateTime zonedDeparture = departureTime.atZoneSameInstant(ZoneId.of("Europe/Amsterdam"));
+        ZonedDateTime zonedArrival = arrivalTime.atZoneSameInstant(ZoneId.of("Europe/Amsterdam"));
+
+        DateTimeFormatter displayFormat = DateTimeFormatter.ofPattern("HH:mm");
+        String formattedDepartureTime = zonedDeparture.format(displayFormat);
+        String formattedArrivalTime = zonedArrival.format(displayFormat);
+
+
+        int delay = departureStop.getStopDepartureInfo().get(0).getDelayInSeconds();
+        boolean cancelled = departureStop.getStopDepartureInfo().get(0).isCancelled();
+        boolean isOnTime = !cancelled && delay <= 60;
+        boolean isDelayed = !cancelled && delay > 60;
+
+        Duration timeUntilDep = Duration.between(ZonedDateTime.now(ZoneId.of("Europe/Amsterdam")), zonedDeparture);
+        String timeUntilDeparture = timeUntilDep.toMinutes() > 0
+                ? timeUntilDep.toMinutes() + " minutes"
+                : (timeUntilDep.toMinutes() == 0 ? "Departing now" : "Departed");
+        FullTripResponse trip = new FullTripResponse();
+        trip.setTrainNumber((int) trainNumber);
+        trip.setDepartureStation(departureStationCode);
+        trip.setArrivalStation(arrivalStationCode);
+        trip.setDirection(arrivalStop.getStopLocation().getStopName());
+        trip.setDepartureTime(formattedDepartureTime);
+        trip.setArrivalTime(formattedArrivalTime);
+        trip.setOnTime(isOnTime);
+        trip.setDelayed(isDelayed);
+        trip.setCancelled(cancelled);
+        trip.setDelayDuration(delay);
+        trip.setDeparturePlatformNumber(departureStop.getStopDepartureInfo().get(0).getPlatformNumber());
+        trip.setArrivalPlatformNumber(arrivalStop.getStopArrivalInfo().get(0).getPlatformNumber());
+        trip.setTimeUntilDeparture(timeUntilDeparture);
+        trip.setDate(departureTime.toLocalDate());
+        trip.setIntermediateStops(stopInfos);
+
+        return trip;
     }
-
-
 }

@@ -1,4 +1,4 @@
-package com.example.Timetables.TimetableApp.service;
+package com.example.Timetables.TimetableApp.service.AuthServices;
 
 import com.example.Timetables.TimetableApp.dto.LoginUserDto;
 import com.example.Timetables.TimetableApp.dto.RegisterUserDto;
@@ -11,8 +11,6 @@ import org.springframework.security.authentication.UsernamePasswordAuthenticatio
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 
-import javax.swing.text.html.Option;
-import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.Optional;
 import java.util.Random;

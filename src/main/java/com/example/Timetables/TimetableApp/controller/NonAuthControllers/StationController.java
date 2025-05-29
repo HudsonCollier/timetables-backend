@@ -1,4 +1,4 @@
-package com.example.Timetables.TimetableApp.controller;
+package com.example.Timetables.TimetableApp.controller.NonAuthControllers;
 import com.example.Timetables.TimetableApp.model.Station;
 import com.example.Timetables.TimetableApp.service.StationService;
 import org.springframework.web.bind.annotation.GetMapping;

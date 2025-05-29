@@ -34,7 +34,9 @@ public class SecurityConfiguration {
                 .csrf(csrf -> csrf.disable())
                 .authorizeHttpRequests(authorize -> authorize
                         .requestMatchers("/auth/**").permitAll()
-                        // Require authentication for all other requests
+                        .requestMatchers("/timetable/**").permitAll()
+                        .requestMatchers("/trains/**").permitAll()
+                        .requestMatchers("/stations/**").permitAll()
                         .anyRequest().authenticated()
                 )
                 .sessionManagement(session -> session

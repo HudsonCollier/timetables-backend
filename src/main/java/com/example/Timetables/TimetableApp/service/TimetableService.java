@@ -31,34 +31,6 @@ public class TimetableService {
                 .build();
     }
 
-    public List<String> getTimetableForStation(String stationCode) {
-        JsonNode response = timetableClient.get()
-                .uri(uriBuilder -> uriBuilder
-                        .path("/departures")
-                        .queryParam("station", stationCode)
-                        .build())
-                .retrieve()
-                .bodyToMono(JsonNode.class)
-                .block();
-
-        List<String> timetable = new ArrayList<>();
-
-        if (response != null && response.has("payload") && response.get("payload").has("departures")) {
-            JsonNode departures = response.get("payload").get("departures");
-
-            for (JsonNode dep : departures) {
-                String destination = dep.get("direction").asText();
-                String trainNumber = dep.get("product").get("number").asText();
-                String time = dep.get("plannedDateTime").asText();
-
-                String entry = time + " – Train " + trainNumber + " to " + destination;
-                timetable.add(entry);
-            }
-        }
-        return timetable;
-    }
-
-
     public List<TimetableEntry> getTimetable(String stationCode) {
         JsonNode response = timetableClient.get()
                 .uri(uriBuilder -> uriBuilder

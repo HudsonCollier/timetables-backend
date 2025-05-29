@@ -55,7 +55,6 @@ public class StationService {
             }
         }
 
-
         System.out.println(stations);
         return stations;
     }

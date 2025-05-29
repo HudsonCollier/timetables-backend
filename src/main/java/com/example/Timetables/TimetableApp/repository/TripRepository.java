@@ -1,11 +1,9 @@
 package com.example.Timetables.TimetableApp.repository;
 
-import com.example.Timetables.TimetableApp.model.Trip;
-import org.apache.catalina.User;
 import org.springframework.data.jpa.repository.JpaRepository;
 
 import java.util.List;
 
-public interface TripRepository extends JpaRepository<Trip, Long> {
-    List<Trip> findByUserId(Long userId);
-}
+//public interface   TripRepository extends JpaRepository<Trip, Long> {
+//    List<Trip> findByUserId(Long userId);
+//}

@@ -1,7 +1,7 @@
-package com.example.Timetables.TimetableApp.controller;
+package com.example.Timetables.TimetableApp.controller.AuthControllers;
 
 import com.example.Timetables.TimetableApp.model.User;
-import com.example.Timetables.TimetableApp.service.UserService;
+import com.example.Timetables.TimetableApp.service.AuthServices.UserService;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
