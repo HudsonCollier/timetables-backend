@@ -5,7 +5,7 @@ import lombok.Setter;
 
 @Getter
 @Setter
-public class FullStopInfo {
+public class StopInfo {
     private String stationName;
     private String stationCode;
     private String arrivalTime;

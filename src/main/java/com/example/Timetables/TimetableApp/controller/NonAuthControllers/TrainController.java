@@ -1,7 +1,7 @@
 package com.example.Timetables.TimetableApp.controller.NonAuthControllers;
 
 
-import com.example.Timetables.TimetableApp.model.FullTripResponse;
+import com.example.Timetables.TimetableApp.model.TripResponse;
 import com.example.Timetables.TimetableApp.service.TrainService;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -24,7 +24,7 @@ public class TrainController {
             @RequestParam("trainNumber") long trainNumber
     ) {
         try {
-            FullTripResponse trip = trainService.searchTrip(fromStation, toStation, trainNumber);
+            TripResponse trip = trainService.searchTrip(fromStation, toStation, trainNumber);
 
             if (trip == null) {
                 return ResponseEntity.status(HttpStatus.NOT_FOUND)

@@ -1,8 +1,7 @@
 package com.example.Timetables.TimetableApp.service;
-import com.example.Timetables.TimetableApp.model.FullStopInfo;
-import com.example.Timetables.TimetableApp.model.FullTripResponse;
+import com.example.Timetables.TimetableApp.model.StopInfo;
+import com.example.Timetables.TimetableApp.model.TripResponse;
 import com.example.Timetables.TimetableApp.model.JourneyDetailsResponse.Stop;
-import com.example.Timetables.TimetableApp.model.JourneyDetailsResponse.TripResponse;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
@@ -33,8 +32,8 @@ public class TrainService {
         this.objectMapper = new ObjectMapper();
     }
 
-    public FullTripResponse searchTrip(String departureStationCode, String arrivalStationCode, long trainNumber) {
-        TripResponse response = v2Client.get()
+    public TripResponse searchTrip(String departureStationCode, String arrivalStationCode, long trainNumber) {
+        com.example.Timetables.TimetableApp.model.JourneyDetailsResponse.TripResponse response = v2Client.get()
                 .uri(uri -> uri
                         .path("/journey")
                         .queryParam("train", trainNumber)
@@ -43,7 +42,7 @@ public class TrainService {
                         .queryParam("omitCrowdForecast", false)
                         .build())
                 .retrieve()
-                .bodyToMono(TripResponse.class)
+                .bodyToMono(com.example.Timetables.TimetableApp.model.JourneyDetailsResponse.TripResponse.class)
                 .block();
 
         if (response == null || response.getPayload() == null || response.getPayload().getStops() == null) {
@@ -81,8 +80,8 @@ public class TrainService {
 
         DateTimeFormatter timeFormatter = DateTimeFormatter.ofPattern("HH:mm");
 
-        List<FullStopInfo> stopInfos = relevantStops.stream().map(s -> {
-            FullStopInfo info = new FullStopInfo();
+        List<StopInfo> stopInfos = relevantStops.stream().map(s -> {
+            StopInfo info = new StopInfo();
 
             OffsetDateTime arrival = s.getStopArrivalInfo() != null ? s.getStopArrivalInfo().get(0).getStopArrivalTime() : null;
             OffsetDateTime departure = s.getStopDepartureInfo() != null ? s.getStopDepartureInfo().get(0).getStopDepartureTime() : null;
@@ -128,7 +127,7 @@ public class TrainService {
         String timeUntilDeparture = timeUntilDep.toMinutes() > 0
                 ? timeUntilDep.toMinutes() + " minutes"
                 : (timeUntilDep.toMinutes() == 0 ? "Departing now" : "Departed");
-        FullTripResponse trip = new FullTripResponse();
+        TripResponse trip = new TripResponse();
         trip.setTrainNumber((int) trainNumber);
         trip.setDepartureStation(departureStationCode);
         trip.setArrivalStation(arrivalStationCode);

@@ -4,12 +4,11 @@ import lombok.Getter;
 import lombok.Setter;
 
 import java.time.LocalDate;
-import java.util.Date;
 import java.util.List;
 
 @Getter
 @Setter
-public class FullTripResponse {
+public class TripResponse {
     private long trainNumber;
     private String departureStation;
     private String arrivalStation;
@@ -24,7 +23,7 @@ public class FullTripResponse {
     private String arrivalPlatformNumber;
     private String timeUntilDeparture;
     private LocalDate date;
-    private List<FullStopInfo> intermediateStops;
+    private List<StopInfo> intermediateStops;
 
     // Adding
     private int tripDistance;
