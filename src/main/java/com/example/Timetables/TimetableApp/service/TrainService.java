@@ -74,7 +74,7 @@ public class TrainService {
         Stop arrivalStop = allStops.get(arrivalIndex);
 
         // Find all the stops between the departure and arrival stops where the status is STOP
-        List<Stop> relevantStops = allStops.subList(departureIndex + 1, arrivalIndex + 1).stream()
+        List<Stop> relevantStops = allStops.subList(departureIndex + 1, arrivalIndex).stream()
                 .filter(stop -> "STOP".equalsIgnoreCase(stop.getStatus()))
                 .toList();
 
@@ -132,7 +132,7 @@ public class TrainService {
         trip.setTrainNumber((int) trainNumber);
         trip.setDepartureStation(departureStationCode);
         trip.setArrivalStation(arrivalStationCode);
-        trip.setDirection(arrivalStop.getStopLocation().getStopName());
+        trip.setDirection(arrivalStop.getDirection());
         trip.setDepartureTime(formattedDepartureTime);
         trip.setArrivalTime(formattedArrivalTime);
         trip.setOnTime(isOnTime);
