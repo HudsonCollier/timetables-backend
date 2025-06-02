@@ -37,4 +37,15 @@ public class TripController {
         return ResponseEntity.ok(trips);
     }
 
+    @DeleteMapping("/{id}")
+    public ResponseEntity<?> deleteTrip(
+            @PathVariable Long id,
+            @AuthenticationPrincipal UserDetails userDetails) {
+
+        System.out.println("Inside the delete trip method");
+        tripService.deleteTripForUser(id, userDetails.getUsername());
+        return ResponseEntity.noContent().build();
+    }
+
+
 }

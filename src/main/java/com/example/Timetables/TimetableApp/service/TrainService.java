@@ -80,7 +80,7 @@ public class TrainService {
 
         DateTimeFormatter timeFormatter = DateTimeFormatter.ofPattern("HH:mm");
 
-        List<StopInfo> stopInfos = relevantStops.stream().map(s -> {
+                    List<StopInfo> stopInfos = relevantStops.stream().map(s -> {
             StopInfo info = new StopInfo();
 
             OffsetDateTime arrival = s.getStopArrivalInfo() != null ? s.getStopArrivalInfo().get(0).getStopArrivalTime() : null;

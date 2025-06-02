@@ -1,5 +1,6 @@
 package com.example.Timetables.TimetableApp.model;
 
+import com.fasterxml.jackson.annotation.JsonManagedReference;
 import jakarta.persistence.*;
 import lombok.Getter;
 import lombok.Setter;
@@ -17,7 +18,7 @@ public class Trip{
     private long id;
 
     @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "user_id", nullable = false) // FK to users.id
+    @JoinColumn(name = "user_id", nullable = false) // FK to users id
     private User user;
 
     private long trainNumber;
@@ -37,6 +38,9 @@ public class Trip{
     private int tripDistance;
     private int tripDuration;
 
-    @Transient
-    private List<StopInfo> intermediateStops;
+//    @Transient
+//    private List<StopInfo> intermediateStops;
+
+    @OneToMany(mappedBy = "trip", cascade = CascadeType.ALL, orphanRemoval = true)
+    private List<StopEntity> intermediateStops;
 }

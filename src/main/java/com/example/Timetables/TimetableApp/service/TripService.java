@@ -1,5 +1,7 @@
 package com.example.Timetables.TimetableApp.service;
 
+import com.example.Timetables.TimetableApp.model.JourneyDetailsResponse.Stop;
+import com.example.Timetables.TimetableApp.model.StopEntity;
 import com.example.Timetables.TimetableApp.model.TripResponse;
 import com.example.Timetables.TimetableApp.model.Trip;
 import com.example.Timetables.TimetableApp.model.User;
@@ -70,7 +72,21 @@ public class TripService {
         trip.setTripDistance(tripResponse.getTripDistance());
         trip.setTripDuration(tripResponse.getTripDuration());
 
-        trip.setIntermediateStops(tripResponse.getIntermediateStops());
+        List<StopEntity> stopEntities = tripResponse.getIntermediateStops().stream().map(stopInfo -> {
+            StopEntity stop = new StopEntity();
+
+            stop.setStationName(stopInfo.getStationName());
+            stop.setStationCode(stopInfo.getStationCode());
+            stop.setArrivalTime(stopInfo.getArrivalTime());
+            stop.setDepartureTime(stopInfo.getDepartureTime());
+            stop.setArrivalPlatform(stopInfo.getArrivalPlatform());
+            stop.setDeparturePlatform(stopInfo.getDeparturePlatform());
+            stop.setTrip(trip);
+            return stop;
+        }).toList();
+
+//        trip.setIntermediateStops(tripResponse.getIntermediateStops());
+        trip.setIntermediateStops(stopEntities);
         return tripRepository.save(trip);
     }
 
@@ -90,6 +106,21 @@ public class TripService {
         System.out.println("MADE IT IN GETTRIPS");
         return tripRepository.findByUserId(user.getId());
     }
+
+    public void deleteTripForUser(Long tripId, String username) {
+        User user = userRepository.findByUsername(username)
+                .orElseThrow(() -> new RuntimeException("User not found"));
+
+        Trip trip = tripRepository.findById(tripId)
+                .orElseThrow(() -> new RuntimeException("Trip not found"));
+
+        if (!trip.getUser().getId().equals(user.getId())) {
+            throw new RuntimeException("You are not authorized to delete this trip");
+        }
+
+        tripRepository.delete(trip);
+    }
+
 }
 
 
