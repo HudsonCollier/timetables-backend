@@ -14,7 +14,14 @@ import org.springframework.web.reactive.function.client.WebClient;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.core.userdetails.UserDetails;
 
+import java.time.LocalTime;
+import java.time.ZoneId;
+import java.time.ZonedDateTime;
+import java.time.format.DateTimeFormatter;
 import java.util.List;
+import java.util.concurrent.Executors;
+import java.util.concurrent.ScheduledExecutorService;
+import java.util.concurrent.TimeUnit;
 
 @Service
 public class TripService {
@@ -22,6 +29,8 @@ public class TripService {
     private final UserRepository userRepository;
     private final TrainService trainService;
     private final WebClient v2Client;
+    private final ScheduledExecutorService scheduler = Executors.newScheduledThreadPool(1);
+
 
     public TripService(
             TripRepository tripRepository,
@@ -85,9 +94,25 @@ public class TripService {
             return stop;
         }).toList();
 
-//        trip.setIntermediateStops(tripResponse.getIntermediateStops());
         trip.setIntermediateStops(stopEntities);
-        return tripRepository.save(trip);
+
+        trip.setDepartureStationName(tripResponse.getDepartureStationName());
+        trip.setArrivalStationName(tripResponse.getArrivalStationName());
+
+        // Checking if the trip is live
+        DateTimeFormatter timeFormatter = DateTimeFormatter.ofPattern("HH:mm");
+        LocalTime currentTime = LocalTime.now(ZoneId.of("Europe/Amsterdam"));
+        LocalTime arrivalTime = LocalTime.parse(tripResponse.getArrivalTime(), timeFormatter);
+
+        boolean isLive = !tripResponse.isCancelled() && currentTime.isBefore(arrivalTime);
+        trip.setLive(isLive);
+
+        Trip savedTrip = tripRepository.save(trip);
+        if (isLive) {
+//            startLiveMonitoring(savedTrip.getId());
+        }
+
+        return savedTrip;
     }
 
     private String getAuthenticatedUsername() {
@@ -120,6 +145,78 @@ public class TripService {
 
         tripRepository.delete(trip);
     }
+
+
+
+
+
+
+
+
+
+
+
+
+//    // LIVE DATA
+//    public void startLiveMonitoring(long tripId) {
+//        scheduler.scheduleAtFixedRate(() -> {
+//            try {
+//                updateLiveTrip(tripId);
+//            } catch (Exception e) {
+//                // ERROR
+//            }
+//        }, 0, 30, TimeUnit.SECONDS);
+//    }
+//
+//    public void updateLiveTrip(Long tripId) {
+//        Trip trip = tripRepository.findById(tripId)
+//                .orElseThrow(() -> new RuntimeException("Trip not found"));
+//
+//        TripResponse liveTripData = trainService.searchTrip(
+//                trip.getDepartureStation(),
+//                trip.getArrivalStation(),
+//                trip.getTrainNumber()
+//        );
+//
+//        if (liveTripData == null) {
+//            return;
+//        }
+//
+//        // Update trip data
+//        trip.setOnTime(liveTripData.isOnTime());
+//        trip.setDelayed(liveTripData.isDelayed());
+//        trip.setCancelled(liveTripData.isCancelled());
+//        trip.setDelayDuration(liveTripData.getDelayDuration());
+//        trip.setDeparturePlatformNumber(liveTripData.getDeparturePlatformNumber());
+//        trip.setArrivalPlatformNumber(liveTripData.getArrivalPlatformNumber());
+//        trip.setTimeUntilDeparture(liveTripData.getTimeUntilDeparture());
+//
+//        // Update intermediate stops
+//        List<StopEntity> updatedStops = liveTripData.getIntermediateStops().stream()
+//                .map(stopInfo -> {
+//                    StopEntity stop = new StopEntity();
+//                    stop.setStationName(stopInfo.getStationName());
+//                    stop.setStationCode(stopInfo.getStationCode());
+//                    stop.setArrivalTime(stopInfo.getArrivalTime());
+//                    stop.setDepartureTime(stopInfo.getDepartureTime());
+//                    stop.setArrivalPlatform(stopInfo.getArrivalPlatform());
+//                    stop.setDeparturePlatform(stopInfo.getDeparturePlatform());
+//                    stop.setTrip(trip);
+//                    return stop;
+//                }).toList();
+//
+//        trip.setIntermediateStops(updatedStops);
+//
+//        // Check if the trip is still live by comparing the time strings
+//        DateTimeFormatter timeFormatter = DateTimeFormatter.ofPattern("HH:mm");
+//        LocalTime currentTime = LocalTime.now(ZoneId.of("Europe/Amsterdam"));
+//        LocalTime arrivalTime = LocalTime.parse(trip.getArrivalTime(), timeFormatter);
+//
+//        boolean isStillLive = !trip.isCancelled() && currentTime.isBefore(arrivalTime);
+//        trip.setLive(isStillLive);
+//
+//        tripRepository.save(trip);
+//    }
 
 }
 

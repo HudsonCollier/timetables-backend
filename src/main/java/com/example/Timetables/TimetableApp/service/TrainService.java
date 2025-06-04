@@ -143,6 +143,8 @@ public class TrainService {
         trip.setTimeUntilDeparture(timeUntilDeparture);
         trip.setDate(departureTime.toLocalDate());
         trip.setIntermediateStops(stopInfos);
+        trip.setDepartureStationName(departureStop.getStopLocation().getStopName());
+        trip.setArrivalStationName(arrivalStop.getStopLocation().getStopName());
 
         return trip;
     }

@@ -28,4 +28,8 @@ public class TripResponse {
     // Adding
     private int tripDistance;
     private int tripDuration;
+
+    //NEW
+    private String departureStationName;
+    private String arrivalStationName;
 }
