@@ -124,9 +124,14 @@ public class TrainService {
         boolean isDelayed = !cancelled && delay > 60;
 
         Duration timeUntilDep = Duration.between(ZonedDateTime.now(ZoneId.of("Europe/Amsterdam")), zonedDeparture);
-        String timeUntilDeparture = timeUntilDep.toMinutes() > 0
-                ? timeUntilDep.toMinutes() + " minutes"
-                : (timeUntilDep.toMinutes() == 0 ? "Departing now" : "Departed");
+        String timeUntilDeparture;
+        if (timeUntilDep.toMinutes() > 0) {
+            timeUntilDeparture = "Departing in " + timeUntilDep.toMinutes() + " min";
+        } else if (timeUntilDep.toMinutes() == 0) {
+            timeUntilDeparture = "Departing now";
+        } else {
+            timeUntilDeparture = "Departed";
+        }
         TripResponse trip = new TripResponse();
         trip.setTrainNumber((int) trainNumber);
         trip.setDepartureStation(departureStationCode);

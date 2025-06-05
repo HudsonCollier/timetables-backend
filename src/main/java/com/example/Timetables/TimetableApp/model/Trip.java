@@ -34,18 +34,17 @@ public class Trip{
     private String departurePlatformNumber;
     private String arrivalPlatformNumber;
     private String timeUntilDeparture;
+    private String timeUntilArrival;
     private LocalDate date;
     private int tripDistance;
     private int tripDuration;
 
     private String departureStationName;
     private String arrivalStationName;
+    private String departureCity;
+    private String arrivalCity;
 
-    //NEW -- Uncomment
     private boolean isLive;
-
-//    @Transient
-//    private List<StopInfo> intermediateStops;
 
     @OneToMany(mappedBy = "trip", cascade = CascadeType.ALL, orphanRemoval = true)
     private List<StopEntity> intermediateStops;

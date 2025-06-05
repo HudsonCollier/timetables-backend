@@ -27,6 +27,11 @@ public class TripController {
                 request.getDepartureStation(),
                 request.getArrivalStation(),
                 request.getTrainNumber());
+
+        if (savedTrip.isLive()) {
+            tripService.startLiveMonitoring(savedTrip.getId());
+        }
+
         return ResponseEntity.ok(savedTrip);
     }
 

@@ -3,8 +3,11 @@ package com.example.Timetables.TimetableApp.service.AuthServices;
 import com.example.Timetables.TimetableApp.dto.LoginUserDto;
 import com.example.Timetables.TimetableApp.dto.RegisterUserDto;
 import com.example.Timetables.TimetableApp.dto.VerifyUserDto;
+import com.example.Timetables.TimetableApp.model.Passport;
 import com.example.Timetables.TimetableApp.model.User;
+import com.example.Timetables.TimetableApp.repository.PassportRepository;
 import com.example.Timetables.TimetableApp.repository.UserRepository;
+import com.example.Timetables.TimetableApp.service.PassportService;
 import jakarta.mail.MessagingException;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
@@ -21,17 +24,23 @@ public class AuthenticationService {
     private final PasswordEncoder passwordEncoder;
     private final AuthenticationManager authenticationManager;
     private final EmailService emailService;
+    private final PassportRepository passportRepository;
+    private PassportService passportService;
 
     public AuthenticationService(
             UserRepository userRepository,
             AuthenticationManager authenticationManager,
             PasswordEncoder passwordEncoder,
-            EmailService emailService
+            EmailService emailService,
+            PassportService passportService,
+            PassportRepository passportRepository
     ) {
         this.authenticationManager = authenticationManager;
         this.userRepository = userRepository;
         this.passwordEncoder = passwordEncoder;
         this.emailService = emailService;
+        this.passportRepository = passportRepository;
+        this.passportService = passportService;
     }
 
     public User signup(RegisterUserDto input) {
@@ -40,7 +49,21 @@ public class AuthenticationService {
         user.setVerificationCodeExpiresAt(LocalDateTime.now().plusMinutes(15));
         user.setEnabled(false);
         sendVerificationEmail(user);
-        return userRepository.save(user);
+        User savedUser = userRepository.save(user);
+
+        Passport passport = new Passport();
+        passport.setUser(savedUser);
+        passport.setNumOfTrains(0);
+        passport.setNumOfStations(0);
+        passport.setNumOfCountries(0);
+        passport.setTotalDistance(0);
+        passport.setTotalDuration(0);
+        passport.setTotalDelayInMinutes(0);
+        passport.setAvgDelayTimeInMinutes(0);
+
+        passportRepository.save(passport);
+
+        return savedUser;
     }
 
     public User authenticate(LoginUserDto input) {

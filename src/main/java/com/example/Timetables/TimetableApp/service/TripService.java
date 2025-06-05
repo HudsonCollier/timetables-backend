@@ -6,6 +6,7 @@ import com.example.Timetables.TimetableApp.model.TripResponse;
 import com.example.Timetables.TimetableApp.model.Trip;
 import com.example.Timetables.TimetableApp.model.User;
 // Removed unused import com.example.Timetables.TimetableApp.model.TrainInfo;
+import com.example.Timetables.TimetableApp.repository.PassportRepository;
 import com.example.Timetables.TimetableApp.repository.TripRepository;
 import com.example.Timetables.TimetableApp.repository.UserRepository;
 import org.springframework.beans.factory.annotation.Value;
@@ -14,14 +15,11 @@ import org.springframework.web.reactive.function.client.WebClient;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.core.userdetails.UserDetails;
 
-import java.time.LocalTime;
-import java.time.ZoneId;
-import java.time.ZonedDateTime;
+import java.time.*;
 import java.time.format.DateTimeFormatter;
 import java.util.List;
-import java.util.concurrent.Executors;
-import java.util.concurrent.ScheduledExecutorService;
-import java.util.concurrent.TimeUnit;
+import java.util.Map;
+import java.util.concurrent.*;
 
 @Service
 public class TripService {
@@ -30,12 +28,17 @@ public class TripService {
     private final TrainService trainService;
     private final WebClient v2Client;
     private final ScheduledExecutorService scheduler = Executors.newScheduledThreadPool(1);
+    private final Map<Long, ScheduledFuture<?>> activeMonitors = new ConcurrentHashMap<>();
+    private final PassportRepository passportRepository;
+    private final PassportService passportService;
 
 
     public TripService(
             TripRepository tripRepository,
             UserRepository userRepository,
             TrainService trainService,
+            PassportService passportService,
+            PassportRepository passportRepository,
 
             WebClient.Builder webClientBuilder,
             @Value("${ns.api.key}") String apiKey
@@ -43,6 +46,8 @@ public class TripService {
         this.tripRepository = tripRepository;
         this.userRepository = userRepository;
         this.trainService = trainService;
+        this.passportService = passportService;
+        this.passportRepository = passportRepository;
         this.v2Client = webClientBuilder
                 .baseUrl("https://gateway.apiportal.ns.nl/reisinformatie-api/api/v2")
                 .defaultHeader("Ocp-Apim-Subscription-Key", apiKey)
@@ -98,20 +103,37 @@ public class TripService {
 
         trip.setDepartureStationName(tripResponse.getDepartureStationName());
         trip.setArrivalStationName(tripResponse.getArrivalStationName());
+        trip.setDepartureCity(extractCityName(tripResponse.getDepartureStationName()));
+        trip.setArrivalCity(extractCityName(tripResponse.getArrivalStationName()));
 
-        // Checking if the trip is live
-        DateTimeFormatter timeFormatter = DateTimeFormatter.ofPattern("HH:mm");
-        LocalTime currentTime = LocalTime.now(ZoneId.of("Europe/Amsterdam"));
-        LocalTime arrivalTime = LocalTime.parse(tripResponse.getArrivalTime(), timeFormatter);
 
-        boolean isLive = !tripResponse.isCancelled() && currentTime.isBefore(arrivalTime);
-        trip.setLive(isLive);
+        DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm");
+        ZoneId zone = ZoneId.of("Europe/Amsterdam");
 
-        Trip savedTrip = tripRepository.save(trip);
-        if (isLive) {
-//            startLiveMonitoring(savedTrip.getId());
+        ZonedDateTime now = ZonedDateTime.now(zone);
+
+        LocalDateTime arrivalLocalDateTime = LocalDateTime.parse(
+                trip.getDate() + " " + trip.getArrivalTime(), formatter
+        );
+        ZonedDateTime arrivalDateTime = arrivalLocalDateTime.atZone(zone);
+
+        long arrivingInMinutes = Duration.between(now, arrivalDateTime).toMinutes();
+        if (arrivingInMinutes <= 0) {
+            trip.setTimeUntilArrival("Arrived");
+        } else {
+            trip.setTimeUntilArrival(arrivingInMinutes + " min");
         }
 
+        boolean isStillLive = !trip.isCancelled() && now.isBefore(arrivalDateTime);
+
+        trip.setLive(isStillLive);
+
+        Trip savedTrip = tripRepository.save(trip);
+        if (isStillLive) {
+            startLiveMonitoring(savedTrip.getId());
+        }
+
+        passportService.updatePassport(trip);
         return savedTrip;
     }
 
@@ -147,77 +169,112 @@ public class TripService {
     }
 
 
+    public void startLiveMonitoring(long tripId) {
+        if (activeMonitors.containsKey(tripId)) {
+            return;
+        }
+
+        ScheduledFuture<?> monitor = scheduler.scheduleAtFixedRate(() -> {
+            try {
+                updateLiveTrip(tripId);
+            } catch (Exception e) {
+                System.err.println("Error updating live trip " + tripId + ": " + e.getMessage());
+                stopLiveMonitoring(tripId);
+            }
+        }, 0, 60, TimeUnit.SECONDS);
+
+        activeMonitors.put(tripId, monitor);
+    }
+
+    public void stopLiveMonitoring(long tripId) {
+        ScheduledFuture<?> monitor = activeMonitors.remove(tripId);
+        if (monitor != null) {
+            monitor.cancel(false);
+        }
+    }
+
+    public void updateLiveTrip(Long tripId) {
+        Trip trip = tripRepository.findById(tripId)
+                .orElseThrow(() -> new RuntimeException("Trip not found"));
+
+        TripResponse liveTripData = trainService.searchTrip(
+                trip.getDepartureStation(),
+                trip.getArrivalStation(),
+                trip.getTrainNumber()
+        );
+
+        if (liveTripData == null) {
+            stopLiveMonitoring(tripId);
+            return;
+        }
+
+        trip.setOnTime(liveTripData.isOnTime());
+        trip.setDelayed(liveTripData.isDelayed());
+        trip.setCancelled(liveTripData.isCancelled());
+        trip.setDelayDuration(liveTripData.getDelayDuration());
+        trip.setDeparturePlatformNumber(liveTripData.getDeparturePlatformNumber());
+        trip.setArrivalPlatformNumber(liveTripData.getArrivalPlatformNumber());
+        trip.setTimeUntilDeparture(liveTripData.getTimeUntilDeparture());
+
+        List<StopEntity> updatedStops = liveTripData.getIntermediateStops().stream()
+                .map(stopInfo -> {
+                    StopEntity stop = new StopEntity();
+                    stop.setStationName(stopInfo.getStationName());
+                    stop.setStationCode(stopInfo.getStationCode());
+                    stop.setArrivalTime(stopInfo.getArrivalTime());
+                    stop.setDepartureTime(stopInfo.getDepartureTime());
+                    stop.setArrivalPlatform(stopInfo.getArrivalPlatform());
+                    stop.setDeparturePlatform(stopInfo.getDeparturePlatform());
+                    stop.setTrip(trip);
+                    return stop;
+                }).toList();
+
+        trip.setIntermediateStops(updatedStops);
+
+        // Check if the trip is still live
+        DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm");
+        ZoneId zone = ZoneId.of("Europe/Amsterdam");
+
+        ZonedDateTime now = ZonedDateTime.now(zone);
+
+        LocalDateTime arrivalLocalDateTime = LocalDateTime.parse(
+                trip.getDate() + " " + trip.getArrivalTime(), formatter
+        );
+        ZonedDateTime arrivalDateTime = arrivalLocalDateTime.atZone(zone);
+
+        long arrivingInMinutes = Duration.between(now, arrivalDateTime).toMinutes();
+        if (arrivingInMinutes <= 0) {
+            trip.setTimeUntilArrival("Arrived");
+        } else {
+            trip.setTimeUntilArrival(arrivingInMinutes + " min");
+        }
+
+        boolean isStillLive = !trip.isCancelled() && now.isBefore(arrivalDateTime);
+
+        trip.setLive(isStillLive);
+
+        // If trip is no longer live, stop monitoring
+        if (!isStillLive) {
+            stopLiveMonitoring(tripId);
+        }
+
+        tripRepository.save(trip);
+        passportService.updatePassport(trip);
+    }
 
 
+    public static String extractCityName(String stationName) {
+        String[] knownSuffixes = {
+                "Centraal", "Zuid", "Noord", "CS", "Laan v NOI", "Buiten", "De Vink", "Driebergen-Zeist"
 
-
-
-
-
-
-
-
-//    // LIVE DATA
-//    public void startLiveMonitoring(long tripId) {
-//        scheduler.scheduleAtFixedRate(() -> {
-//            try {
-//                updateLiveTrip(tripId);
-//            } catch (Exception e) {
-//                // ERROR
-//            }
-//        }, 0, 30, TimeUnit.SECONDS);
-//    }
-//
-//    public void updateLiveTrip(Long tripId) {
-//        Trip trip = tripRepository.findById(tripId)
-//                .orElseThrow(() -> new RuntimeException("Trip not found"));
-//
-//        TripResponse liveTripData = trainService.searchTrip(
-//                trip.getDepartureStation(),
-//                trip.getArrivalStation(),
-//                trip.getTrainNumber()
-//        );
-//
-//        if (liveTripData == null) {
-//            return;
-//        }
-//
-//        // Update trip data
-//        trip.setOnTime(liveTripData.isOnTime());
-//        trip.setDelayed(liveTripData.isDelayed());
-//        trip.setCancelled(liveTripData.isCancelled());
-//        trip.setDelayDuration(liveTripData.getDelayDuration());
-//        trip.setDeparturePlatformNumber(liveTripData.getDeparturePlatformNumber());
-//        trip.setArrivalPlatformNumber(liveTripData.getArrivalPlatformNumber());
-//        trip.setTimeUntilDeparture(liveTripData.getTimeUntilDeparture());
-//
-//        // Update intermediate stops
-//        List<StopEntity> updatedStops = liveTripData.getIntermediateStops().stream()
-//                .map(stopInfo -> {
-//                    StopEntity stop = new StopEntity();
-//                    stop.setStationName(stopInfo.getStationName());
-//                    stop.setStationCode(stopInfo.getStationCode());
-//                    stop.setArrivalTime(stopInfo.getArrivalTime());
-//                    stop.setDepartureTime(stopInfo.getDepartureTime());
-//                    stop.setArrivalPlatform(stopInfo.getArrivalPlatform());
-//                    stop.setDeparturePlatform(stopInfo.getDeparturePlatform());
-//                    stop.setTrip(trip);
-//                    return stop;
-//                }).toList();
-//
-//        trip.setIntermediateStops(updatedStops);
-//
-//        // Check if the trip is still live by comparing the time strings
-//        DateTimeFormatter timeFormatter = DateTimeFormatter.ofPattern("HH:mm");
-//        LocalTime currentTime = LocalTime.now(ZoneId.of("Europe/Amsterdam"));
-//        LocalTime arrivalTime = LocalTime.parse(trip.getArrivalTime(), timeFormatter);
-//
-//        boolean isStillLive = !trip.isCancelled() && currentTime.isBefore(arrivalTime);
-//        trip.setLive(isStillLive);
-//
-//        tripRepository.save(trip);
-//    }
-
+        };
+        for (String suffix : knownSuffixes) {
+            if (stationName.endsWith(" " + suffix)) {
+                return stationName.substring(0, stationName.length() - suffix.length()).trim();
+            }
+        }
+        return stationName;
+    }
 }
 
 
