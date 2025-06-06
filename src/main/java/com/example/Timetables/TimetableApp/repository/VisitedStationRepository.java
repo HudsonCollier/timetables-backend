@@ -11,4 +11,7 @@ import org.springframework.stereotype.Repository;
 @Repository
 public interface VisitedStationRepository extends JpaRepository<VisitedStation, Long> {
     boolean existsByPassportAndStationCode(Passport passport, String stationCode);
+    void deleteByPassportAndStationCode(Passport passport, String stationCode);
+    long countByPassport(Passport passport);
+    VisitedStation findByPassportAndStationCode(Passport passport, String stationCode);
 }

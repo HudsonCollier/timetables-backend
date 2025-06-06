@@ -77,4 +77,59 @@ public class PassportService {
 
         passportRepository.save(passport);
     }
+
+
+    public void handleTripDeletion(Trip trip) {
+        Passport passport = passportRepository.findByUser(trip.getUser());
+        if (passport == null) {
+            throw new RuntimeException("Passport not found");
+        }
+
+        passport.setNumOfTrains(passport.getNumOfTrains() - 1);
+
+        // Check if departure station is used by other trips
+        boolean isDepartureStationUsedByOtherTrips = tripRepository.existsByUserAndDepartureStationOrArrivalStation(
+                trip.getUser(),
+                trip.getId(),  // Pass the current trip ID
+                trip.getDepartureStation()
+        );
+
+        // Check if arrival station is used by other trips
+        boolean isArrivalStationUsedByOtherTrips = tripRepository.existsByUserAndDepartureStationOrArrivalStation(
+                trip.getUser(),
+                trip.getId(),
+                trip.getArrivalStation()
+        );
+
+        if (!isDepartureStationUsedByOtherTrips) {
+            VisitedStation depStation = visitedStationRepository.findByPassportAndStationCode(passport, trip.getDepartureStation());
+            if (depStation != null) {
+                passport.getVisitedStations().remove(depStation);
+                visitedStationRepository.delete(depStation);
+            }
+        }
+
+
+        if (!isArrivalStationUsedByOtherTrips) {
+            VisitedStation arrStation = visitedStationRepository.findByPassportAndStationCode(passport, trip.getArrivalStation());
+            if (arrStation != null) {
+                passport.getVisitedStations().remove(arrStation);
+                visitedStationRepository.delete(arrStation);
+            }
+        }
+
+        passport.setNumOfStations(passport.getVisitedStations().size());
+
+        passport.setTotalDistance(passport.getTotalDistance() - trip.getTripDistance());
+        passport.setTotalDuration(passport.getTotalDuration() - trip.getTripDuration());
+        passport.setTotalDelayInMinutes(passport.getTotalDelayInMinutes() - trip.getDelayDuration());
+
+        if (passport.getNumOfTrains() > 0) {
+            passport.setAvgDelayTimeInMinutes(passport.getTotalDelayInMinutes() / (float)passport.getNumOfTrains());
+        } else {
+            passport.setAvgDelayTimeInMinutes(0);
+        }
+
+        passportRepository.save(passport);
+    }
 }

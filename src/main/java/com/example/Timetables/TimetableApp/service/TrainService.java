@@ -8,6 +8,8 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 import org.springframework.web.reactive.function.client.WebClient;
 
+import java.math.BigDecimal;
+import java.math.RoundingMode;
 import java.time.Duration;
 import java.time.OffsetDateTime;
 import java.time.ZoneId;
@@ -148,6 +150,9 @@ public class TrainService {
         double arrLon = arrivalStop.getStopLocation().getLongitude();
         double tripDistance = haversine(depLat, depLon, arrLat, arrLon);
 
+        double roundedTripDistance = new BigDecimal(tripDistance)
+                .setScale(2, RoundingMode.HALF_UP)
+                .doubleValue();
 
         TripResponse trip = new TripResponse();
         trip.setTrainNumber((int) trainNumber);
@@ -167,14 +172,14 @@ public class TrainService {
         trip.setIntermediateStops(stopInfos);
         trip.setDepartureStationName(departureStop.getStopLocation().getStopName());
         trip.setArrivalStationName(arrivalStop.getStopLocation().getStopName());
-        trip.setTripDistance(tripDistance);
+        trip.setTripDistance(roundedTripDistance);
 
         return trip;
     }
 
     public double haversine(double depLat, double depLon, double arrLat, double arrLon) {
         double dLat = Math.toRadians(arrLat - depLat);
-        double dLon = Math.toRadians(arrLat - depLon);
+        double dLon = Math.toRadians(arrLon - depLon);
 
         double a = Math.pow(Math.sin(dLat / 2), 2)
                 + Math.cos(Math.toRadians(depLat)) * Math.cos(Math.toRadians(arrLat))

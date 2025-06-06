@@ -18,6 +18,9 @@ public class StopLocation {
     @JsonProperty("uicCode")
     private int uicCode;
 
+    @JsonProperty("lat")
     private double latitude;
+
+    @JsonProperty("lng")
     private double longitude;
 }

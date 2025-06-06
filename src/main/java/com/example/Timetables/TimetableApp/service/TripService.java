@@ -140,7 +140,7 @@ public class TripService {
             startLiveMonitoring(savedTrip.getId());
         }
 
-        passportService.updatePassport(trip);
+        passportService.updatePassport(savedTrip);
         return savedTrip;
     }
 
@@ -179,6 +179,8 @@ public class TripService {
         if (!trip.getUser().getId().equals(user.getId())) {
             throw new RuntimeException("You are not authorized to delete this trip");
         }
+
+        passportService.handleTripDeletion(trip);
 
         tripRepository.delete(trip);
     }
