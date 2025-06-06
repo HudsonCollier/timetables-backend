@@ -10,9 +10,9 @@ import com.example.Timetables.TimetableApp.repository.UserRepository;
 import com.example.Timetables.TimetableApp.repository.VisitedStationRepository;
 import org.springframework.stereotype.Service;
 
-import java.util.HashSet;
-import java.util.Set;
-
+/**
+ * Service that handles the logic for updating the users train passport
+ */
 @Service
 public class PassportService {
     private final TripRepository tripRepository;
@@ -27,6 +27,9 @@ public class PassportService {
         this.visitedStationRepository = visitedStationRepository;
     }
 
+    /**
+     * Retrieves the users passport from their username
+     */
     public Passport getUsersPassport(String username) {
         User user = userRepository.findByUsername(username)
                 .orElseThrow(() -> new RuntimeException("User not found"));
@@ -34,6 +37,9 @@ public class PassportService {
         return passportRepository.findByUser(user);
     }
 
+    /**
+     * Updates the users passport, from the trip that was just added
+     */
     public void updatePassport(Trip trip) {
         Passport passport = passportRepository.findByUser(trip.getUser());
 
@@ -64,12 +70,11 @@ public class PassportService {
         passport.setNumOfStations(passport.getVisitedStations().size());
 
         passport.setNumOfCountries(1);
-        passport.setTotalDistance(passport.getTotalDistance() + trip.getTripDistance()); // NEED TO IMPLEMENT
-        passport.setTotalDuration(passport.getTotalDuration() + trip.getTripDuration()); // NEET TO IMPLEMENT
-        passport.setTotalDelayInMinutes(passport.getTotalDelayInMinutes() + trip.getDelayDuration()); // MIGHT NEED TO FIX
+        passport.setTotalDistance(passport.getTotalDistance() + trip.getTripDistance());
+        passport.setTotalDuration(passport.getTotalDuration() + trip.getTripDuration());
+        passport.setTotalDelayInMinutes(passport.getTotalDelayInMinutes() + trip.getDelayDuration());
         passport.setAvgDelayTimeInMinutes(0); // NEED TO IMPLEMENT
 
         passportRepository.save(passport);
     }
-
 }

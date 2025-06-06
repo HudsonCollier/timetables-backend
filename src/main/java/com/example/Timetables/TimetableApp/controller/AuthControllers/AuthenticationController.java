@@ -10,6 +10,9 @@ import com.example.Timetables.TimetableApp.service.AuthServices.JwtService;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
+/**
+ * Controller that handles all of my authentication endpoints
+ */
 @RequestMapping("/auth")
 @RestController
 public class AuthenticationController {

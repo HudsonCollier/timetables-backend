@@ -5,6 +5,9 @@ import com.fasterxml.jackson.annotation.JsonProperty;
 import lombok.Getter;
 import lombok.Setter;
 
+/**
+ * Used in order to help parse the JSON from the NS API Journey Details endpoint
+ */
 @Getter
 @Setter
 @JsonIgnoreProperties(ignoreUnknown = true)
@@ -15,4 +18,6 @@ public class StopLocation {
     @JsonProperty("uicCode")
     private int uicCode;
 
+    private double latitude;
+    private double longitude;
 }

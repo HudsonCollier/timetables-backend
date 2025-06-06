@@ -11,9 +11,12 @@ import org.springframework.security.web.authentication.UsernamePasswordAuthentic
 import org.springframework.web.cors.CorsConfiguration;
 import org.springframework.web.cors.CorsConfigurationSource;
 import org.springframework.web.cors.UrlBasedCorsConfigurationSource;
-
 import java.util.List;
 
+
+/**
+ * Configures Spring Security, endpoint access and my CORS settings
+ */
 @Configuration
 @EnableWebSecurity
 public class SecurityConfiguration {

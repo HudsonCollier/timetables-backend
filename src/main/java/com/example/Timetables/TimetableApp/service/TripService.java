@@ -1,11 +1,9 @@
 package com.example.Timetables.TimetableApp.service;
 
-import com.example.Timetables.TimetableApp.model.JourneyDetailsResponse.Stop;
 import com.example.Timetables.TimetableApp.model.StopEntity;
 import com.example.Timetables.TimetableApp.model.TripResponse;
 import com.example.Timetables.TimetableApp.model.Trip;
 import com.example.Timetables.TimetableApp.model.User;
-// Removed unused import com.example.Timetables.TimetableApp.model.TrainInfo;
 import com.example.Timetables.TimetableApp.repository.PassportRepository;
 import com.example.Timetables.TimetableApp.repository.TripRepository;
 import com.example.Timetables.TimetableApp.repository.UserRepository;
@@ -21,6 +19,9 @@ import java.util.List;
 import java.util.Map;
 import java.util.concurrent.*;
 
+/**
+ * Service that is responsible for handling the logic behind a user searching for a trip
+ */
 @Service
 public class TripService {
     private final TripRepository tripRepository;
@@ -31,7 +32,6 @@ public class TripService {
     private final Map<Long, ScheduledFuture<?>> activeMonitors = new ConcurrentHashMap<>();
     private final PassportRepository passportRepository;
     private final PassportService passportService;
-
 
     public TripService(
             TripRepository tripRepository,
@@ -54,6 +54,15 @@ public class TripService {
                 .build();
     }
 
+    /**
+     * Allows a user to search for a trip, i.e., Amsterdam Centraal -> Utrecht Centraal on Train 215, and retrieves all
+     * of the data from the journey, such as departing and arriving times, departing and arriving platforms, status of the
+     * trips, delay info, and more.
+     * @param departureStation - The station code of the departure station
+     * @param arrivalStation - The station code of the arrival station
+     * @param trainNumber - THe train number
+     * @return - THe JSON for the trip
+     */
     public Trip searchAndSaveTrip(String departureStation, String arrivalStation, long trainNumber) {
         String username = getAuthenticatedUsername();
         System.out.println(username + "USERNAME");
@@ -63,10 +72,11 @@ public class TripService {
             throw new RuntimeException("Trip response not received");
         }
 
-        //Find the user
+        //Finds the current user
         User user = userRepository.findByUsername(username)
                 .orElseThrow(() -> new RuntimeException("User not found"));
 
+        // Sets the trip entity with the data retrieved from the trip response
         Trip trip = new Trip();
         trip.setUser(user);
         trip.setTrainNumber(trainNumber);
@@ -100,18 +110,16 @@ public class TripService {
         }).toList();
 
         trip.setIntermediateStops(stopEntities);
-
         trip.setDepartureStationName(tripResponse.getDepartureStationName());
         trip.setArrivalStationName(tripResponse.getArrivalStationName());
         trip.setDepartureCity(extractCityName(tripResponse.getDepartureStationName()));
         trip.setArrivalCity(extractCityName(tripResponse.getArrivalStationName()));
 
-
+        // Handles the arrival times
         DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm");
         ZoneId zone = ZoneId.of("Europe/Amsterdam");
 
         ZonedDateTime now = ZonedDateTime.now(zone);
-
         LocalDateTime arrivalLocalDateTime = LocalDateTime.parse(
                 trip.getDate() + " " + trip.getArrivalTime(), formatter
         );
@@ -125,7 +133,6 @@ public class TripService {
         }
 
         boolean isStillLive = !trip.isCancelled() && now.isBefore(arrivalDateTime);
-
         trip.setLive(isStillLive);
 
         Trip savedTrip = tripRepository.save(trip);
@@ -137,6 +144,9 @@ public class TripService {
         return savedTrip;
     }
 
+    /**
+     * Gets the username for the authenticated user
+     */
     private String getAuthenticatedUsername() {
         Object principal = SecurityContextHolder.getContext().getAuthentication().getPrincipal();
         if (principal instanceof UserDetails) {
@@ -146,14 +156,19 @@ public class TripService {
         }
     }
 
+    /**
+     * Gets all of the trips for the currently authenticate user
+     */
     public List<Trip> getTripsForUser(String username) {
         User user = userRepository.findByUsername(username)
                 .orElseThrow(() -> new RuntimeException("User not found"));
 
-        System.out.println("MADE IT IN GETTRIPS");
         return tripRepository.findByUserId(user.getId());
     }
 
+    /**
+     * Handles the logic for deleting a trip from a users account
+     */
     public void deleteTripForUser(Long tripId, String username) {
         User user = userRepository.findByUsername(username)
                 .orElseThrow(() -> new RuntimeException("User not found"));
@@ -169,6 +184,12 @@ public class TripService {
     }
 
 
+    // -------- LIVE TRIP METHODS -----
+
+    /**
+     * If a trip is marked as live, i.e. the train has not arrived at the arrival stop yet. We monitor this trip
+     * and re-fetch the data every minute looking for updated delay and status info
+     */
     public void startLiveMonitoring(long tripId) {
         if (activeMonitors.containsKey(tripId)) {
             return;
@@ -186,6 +207,9 @@ public class TripService {
         activeMonitors.put(tripId, monitor);
     }
 
+    /**
+     * Once a train has made it to the arrival stop, we stop re-fetching the trip data every minute
+     */
     public void stopLiveMonitoring(long tripId) {
         ScheduledFuture<?> monitor = activeMonitors.remove(tripId);
         if (monitor != null) {
@@ -193,6 +217,9 @@ public class TripService {
         }
     }
 
+    /**
+     * Updates the trip data for a given trip, if that trip is marked as live
+     */
     public void updateLiveTrip(Long tripId) {
         Trip trip = tripRepository.findById(tripId)
                 .orElseThrow(() -> new RuntimeException("Trip not found"));
@@ -262,11 +289,13 @@ public class TripService {
         passportService.updatePassport(trip);
     }
 
-
+    /**
+     * Helper method used in order to extract the city name out of a station name using common dutch
+     * suffixes
+     */
     public static String extractCityName(String stationName) {
         String[] knownSuffixes = {
                 "Centraal", "Zuid", "Noord", "CS", "Laan v NOI", "Buiten", "De Vink", "Driebergen-Zeist"
-
         };
         for (String suffix : knownSuffixes) {
             if (stationName.endsWith(" " + suffix)) {

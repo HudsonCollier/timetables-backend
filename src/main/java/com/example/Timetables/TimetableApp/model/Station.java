@@ -1,5 +1,8 @@
 package com.example.Timetables.TimetableApp.model;
 
+/**
+ * Model class for each station
+ */
 public class Station {
     private String name;
     private String code;

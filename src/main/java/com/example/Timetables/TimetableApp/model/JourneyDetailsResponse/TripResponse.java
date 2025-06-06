@@ -5,6 +5,9 @@ import com.fasterxml.jackson.annotation.JsonProperty;
 import lombok.Getter;
 import lombok.Setter;
 
+/**
+ * Used in order to help parse the JSON from the NS API Journey Details endpoint. Top level of the JSON.
+ */
 @Getter
 @Setter
 @JsonIgnoreProperties(ignoreUnknown = true)
@@ -14,9 +17,5 @@ public class TripResponse {
 
     public JourneyPayload getPayload() {
         return payload;
-    }
-
-    public void setPayload(JourneyPayload payload) {
-        this.payload = payload;
     }
 }

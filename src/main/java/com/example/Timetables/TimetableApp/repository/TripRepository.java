@@ -7,6 +7,9 @@ import org.springframework.data.jpa.repository.JpaRepository;
 import java.util.List;
 import java.util.Optional;
 
+/**
+ * Repository that allows us to find trips for a certain user
+ */
 public interface  TripRepository extends JpaRepository<Trip, Long> {
     List<Trip> findByUserId(long id);
     Optional<Trip> findById(long id);

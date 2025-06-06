@@ -1,4 +1,5 @@
 package com.example.Timetables.TimetableApp.service;
+
 import com.example.Timetables.TimetableApp.model.StopInfo;
 import com.example.Timetables.TimetableApp.model.TripResponse;
 import com.example.Timetables.TimetableApp.model.JourneyDetailsResponse.Stop;
@@ -19,11 +20,13 @@ public class TrainService {
 
     private final WebClient v2Client;
     private final ObjectMapper objectMapper;
+    private static final double EARTH_RADIUS_KM = 6371.0;
 
     public TrainService(
             WebClient.Builder webClientBuilder,
             @Value("${ns.api.key}") String apiKey
-    ) {
+    )
+    {
         this.v2Client = webClientBuilder
                 .baseUrl("https://gateway.apiportal.ns.nl/reisinformatie-api/api/v2")
                 .defaultHeader("Ocp-Apim-Subscription-Key", apiKey)
@@ -32,7 +35,8 @@ public class TrainService {
         this.objectMapper = new ObjectMapper();
     }
 
-    public TripResponse searchTrip(String departureStationCode, String arrivalStationCode, long trainNumber) {
+    public TripResponse searchTrip(String departureStationCode, String arrivalStationCode, long trainNumber)
+    {
         com.example.Timetables.TimetableApp.model.JourneyDetailsResponse.TripResponse response = v2Client.get()
                 .uri(uri -> uri
                         .path("/journey")
@@ -80,7 +84,7 @@ public class TrainService {
 
         DateTimeFormatter timeFormatter = DateTimeFormatter.ofPattern("HH:mm");
 
-                    List<StopInfo> stopInfos = relevantStops.stream().map(s -> {
+        List<StopInfo> stopInfos = relevantStops.stream().map(s -> {
             StopInfo info = new StopInfo();
 
             OffsetDateTime arrival = s.getStopArrivalInfo() != null ? s.getStopArrivalInfo().get(0).getStopArrivalTime() : null;
@@ -102,6 +106,9 @@ public class TrainService {
             info.setCancelled(s.getStopDepartureInfo() != null && s.getStopDepartureInfo().get(0).isCancelled());
             info.setDelayInSeconds(s.getStopDepartureInfo() != null ? s.getStopDepartureInfo().get(0).getDelayInSeconds() : 0);
             info.setStatus(s.getStatus());
+
+            info.setLatitude(s.getStopLocation().getLatitude());
+            info.setLongitude(s.getStopLocation().getLongitude());
 
             return info;
         }).toList();
@@ -132,6 +139,16 @@ public class TrainService {
         } else {
             timeUntilDeparture = "Departed";
         }
+
+
+        // Finding distance between departure and arrival station
+        double depLat = departureStop.getStopLocation().getLatitude();
+        double depLon = departureStop.getStopLocation().getLongitude();
+        double arrLat = arrivalStop.getStopLocation().getLatitude();
+        double arrLon = arrivalStop.getStopLocation().getLongitude();
+        double tripDistance = haversine(depLat, depLon, arrLat, arrLon);
+
+
         TripResponse trip = new TripResponse();
         trip.setTrainNumber((int) trainNumber);
         trip.setDepartureStation(departureStationCode);
@@ -150,7 +167,21 @@ public class TrainService {
         trip.setIntermediateStops(stopInfos);
         trip.setDepartureStationName(departureStop.getStopLocation().getStopName());
         trip.setArrivalStationName(arrivalStop.getStopLocation().getStopName());
+        trip.setTripDistance(tripDistance);
 
         return trip;
+    }
+
+    public double haversine(double depLat, double depLon, double arrLat, double arrLon) {
+        double dLat = Math.toRadians(arrLat - depLat);
+        double dLon = Math.toRadians(arrLat - depLon);
+
+        double a = Math.pow(Math.sin(dLat / 2), 2)
+                + Math.cos(Math.toRadians(depLat)) * Math.cos(Math.toRadians(arrLat))
+                * Math.pow(Math.sin(dLon / 2), 2);
+
+        double c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
+
+        return EARTH_RADIUS_KM * c;
     }
 }

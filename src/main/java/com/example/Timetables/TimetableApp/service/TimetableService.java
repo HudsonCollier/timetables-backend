@@ -11,6 +11,9 @@ import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
 import java.util.List;
 
+/**
+ * Service responsible for handling the timetable logic, retrieves all the data about a stations departing trains
+ */
 @Service
 public class TimetableService {
     private final WebClient timetableClient;
@@ -31,6 +34,9 @@ public class TimetableService {
                 .build();
     }
 
+    /**
+     * Retrieves data for all of the departing trains from a given station
+     */
     public List<TimetableEntry> getTimetable(String stationCode) {
         JsonNode response = timetableClient.get()
                 .uri(uriBuilder -> uriBuilder

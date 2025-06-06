@@ -8,6 +8,9 @@ import org.springframework.web.bind.annotation.RestController;
 
 import java.util.List;
 
+/**
+ * REST Controller used to handle the station search
+ */
 @RestController
 @RequestMapping("/stations")
 public class StationController {
@@ -17,7 +20,6 @@ public class StationController {
     public StationController(StationService stationService) {
         this.stationService = stationService;
     }
-
 
     // Used to populate the search bars
     @GetMapping("/search")

@@ -5,12 +5,13 @@ import lombok.Getter;
 import lombok.Setter;
 import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.core.userdetails.UserDetails;
-
-import java.sql.Time;
 import java.time.LocalDateTime;
 import java.util.Collection;
 import java.util.List;
 
+/**
+ * Users entity, used to store users data in the DB along with the rest of the information about their account
+ */
 @Entity
 @Table(name = "users")
 @Getter
@@ -32,7 +33,6 @@ public class User implements UserDetails {
     private LocalDateTime verificationCodeExpiresAt;
     private boolean enabled;
 
-    //NEW
     @Column(name = "first_name")
     private String firstName;
 

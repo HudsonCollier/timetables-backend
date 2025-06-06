@@ -25,7 +25,7 @@ public class TripResponse {
     private LocalDate date;
     private List<StopInfo> intermediateStops;
 
-    private int tripDistance;
+    private double tripDistance;
     private int tripDuration;
 
     private String departureStationName;

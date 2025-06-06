@@ -36,7 +36,8 @@ public class Trip{
     private String timeUntilDeparture;
     private String timeUntilArrival;
     private LocalDate date;
-    private int tripDistance;
+
+    private double tripDistance;
     private int tripDuration;
 
     private String departureStationName;

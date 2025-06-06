@@ -3,6 +3,9 @@ package com.example.Timetables.TimetableApp.dto;
 import lombok.Getter;
 import lombok.Setter;
 
+/**
+ * DTO used for registering a user
+ */
 @Getter
 @Setter
 public class RegisterUserDto {
@@ -10,7 +13,6 @@ public class RegisterUserDto {
     private String password;
     private String username;
 
-    //NEW
     private String firstName;
     private String lastName;
 }

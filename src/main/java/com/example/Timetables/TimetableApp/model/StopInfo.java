@@ -15,4 +15,6 @@ public class StopInfo {
     private String departurePlatform;
     private int delayInSeconds;
     private String status;
+    private double latitude;
+    private double longitude;
 }

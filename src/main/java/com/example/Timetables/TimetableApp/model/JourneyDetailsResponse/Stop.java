@@ -4,9 +4,11 @@ import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import lombok.Getter;
 import lombok.Setter;
-
 import java.util.List;
 
+/**
+ * Used in order to help parse the JSON from the NS API Journey Details endpoint
+ */
 @Getter
 @Setter
 @JsonIgnoreProperties(ignoreUnknown = true)

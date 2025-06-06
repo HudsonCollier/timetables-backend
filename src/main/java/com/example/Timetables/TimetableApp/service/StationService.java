@@ -10,6 +10,9 @@ import org.springframework.web.reactive.function.client.WebClient;
 import java.util.ArrayList;
 import java.util.List;
 
+/**
+ * Service used for auto filling search bar with the station being entered by user
+ */
 @Service
 public class StationService {
 
@@ -33,6 +36,10 @@ public class StationService {
                 .build();
     }
 
+    /**
+     * Retrieves all the stations that start with what the user has entered into the search bar.
+     * i.e, "ams" -> gets all the stations in Amsterdam / or starting with "ams"
+     */
     public List<Station> getStations(String query)
     {
         JsonNode response = stationClient.get()

@@ -4,11 +4,11 @@ import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import lombok.Getter;
 import lombok.Setter;
-
-import java.time.LocalDateTime;
 import java.time.OffsetDateTime;
-import java.time.OffsetTime;
 
+/**
+ * Used in order to help parse the JSON from the NS API Journey Details endpoint
+ */
 @Getter
 @Setter
 @JsonIgnoreProperties(ignoreUnknown = true)

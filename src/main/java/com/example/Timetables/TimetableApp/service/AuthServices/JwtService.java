@@ -15,6 +15,10 @@ import java.util.HashMap;
 import java.util.Map;
 import java.util.function.Function;
 
+/**
+ * Service responsible for generating, validating, and parsing JWTs.
+ * Used to manage authentication in the application.
+ */
 @Service
 public class JwtService {
     @Value("${security.jwt.secret-key}")

@@ -5,9 +5,11 @@ import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.mail.javamail.JavaMailSender;
 import org.springframework.mail.javamail.JavaMailSenderImpl;
-
 import java.util.Properties;
 
+/**
+ * Config class used for setting up email sending capabilities for users to verify their identity
+ */
 @Configuration
 public class EmailConfiguration {
 

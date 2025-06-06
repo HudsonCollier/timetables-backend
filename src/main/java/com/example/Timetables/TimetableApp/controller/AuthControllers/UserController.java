@@ -11,6 +11,9 @@ import org.springframework.web.bind.annotation.RestController;
 
 import java.util.List;
 
+/**
+ * Controller used to handle all of my user related endpoints
+ */
 @RequestMapping("/users")
 @RestController
 public class UserController {

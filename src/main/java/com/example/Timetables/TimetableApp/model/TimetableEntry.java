@@ -2,6 +2,9 @@ package com.example.Timetables.TimetableApp.model;
 
 import java.util.List;
 
+/**
+ * Timetable entry model, this is the data that will be shown on the frontend for each departure from the desired station
+ */
 public class TimetableEntry {
     private String departureTime;
     private String direction;

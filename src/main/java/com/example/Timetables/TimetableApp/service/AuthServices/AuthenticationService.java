@@ -18,6 +18,10 @@ import java.time.LocalDateTime;
 import java.util.Optional;
 import java.util.Random;
 
+/**
+ * Service that is responsible for registering users, authenticating users, verifying users
+ * as well as resending the verification code
+ */
 @Service
 public class AuthenticationService {
     private final UserRepository userRepository;
@@ -43,6 +47,12 @@ public class AuthenticationService {
         this.passportService = passportService;
     }
 
+    /**
+     * Handles user registration
+     * - creates a new user
+     * - sends the verification email
+     * - creates a new train passport for user
+     */
     public User signup(RegisterUserDto input) {
         User user = new User(input.getUsername(), input.getEmail(), passwordEncoder.encode(input.getPassword()), input.getFirstName(), input.getLastName());
         user.setVerificationCode(generateVerificationCode());

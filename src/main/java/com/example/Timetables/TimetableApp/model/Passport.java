@@ -9,6 +9,10 @@ import lombok.Setter;
 import java.util.HashSet;
 import java.util.Set;
 
+/**
+ * Passport entity, used to store all of the users lifetime train data, such as distance travelled, time spent on trains,
+ * countries visited, etc...
+ */
 @Entity
 @Getter
 @Setter
@@ -26,7 +30,7 @@ public class Passport {
     private int numOfTrains;
     private int numOfStations;
     private int numOfCountries;
-    private float totalDistance;
+    private double totalDistance;
     private float totalDuration;
     private int totalDelayInMinutes;
     private float avgDelayTimeInMinutes;

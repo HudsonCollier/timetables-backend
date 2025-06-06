@@ -1,12 +1,14 @@
 package com.example.Timetables.TimetableApp.controller.NonAuthControllers;
 
-
 import com.example.Timetables.TimetableApp.model.TripResponse;
 import com.example.Timetables.TimetableApp.service.TrainService;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
+/**
+ * Temporary controller used for testing my trip search logic
+ */
 @RestController
 @RequestMapping("/trains")
 public class TrainController {
@@ -40,5 +42,4 @@ public class TrainController {
                     .body("An unexpected error occurred: " + e.getMessage());
         }
     }
-
 }

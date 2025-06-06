@@ -7,12 +7,14 @@ import jakarta.persistence.*;
 import lombok.Getter;
 import lombok.Setter;
 
+/**
+ * Stop entity used in order to store each intermediate stop of a trip in the database.
+ */
 @Getter
 @Setter
 @Entity
 @Table(name="stops")
 public class StopEntity {
-
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private long id;
