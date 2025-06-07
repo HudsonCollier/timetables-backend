@@ -1,0 +1,9 @@
+services:
+  - type: web
+    name: timetable-app
+    env: node  #
+    buildCommand: ./mvnw clean package
+    startCommand: java -jar target/TimetableApp-0.0.1-SNAPSHOT.jar
+    envVars:
+      - key: SPRING_PROFILES_ACTIVE
+        value: prod
