@@ -54,7 +54,7 @@ public class SecurityConfiguration {
     @Bean
     public CorsConfigurationSource corsConfigurationSource() {
         CorsConfiguration configuration = new CorsConfiguration();
-        configuration.setAllowedOrigins(List.of("https://timetables-backend-production.up.railway.app", "http://192.168.1.85:8080"));
+        configuration.setAllowedOrigins(List.of("https://web-production-a3962.up.railway.app", "http://192.168.1.85:8080"));
         configuration.setAllowedMethods(List.of("GET", "POST", "PUT", "DELETE"));
         configuration.setAllowedHeaders(List.of("Authorization", "Content-Type"));
 
