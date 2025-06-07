@@ -12,6 +12,10 @@ import org.springframework.web.cors.CorsConfiguration;
 import org.springframework.web.cors.CorsConfigurationSource;
 import org.springframework.web.cors.UrlBasedCorsConfigurationSource;
 import java.util.List;
+import org.springframework.http.HttpMethod;
+
+
+import static org.springframework.security.config.Customizer.withDefaults;
 
 
 /**
@@ -34,8 +38,10 @@ public class SecurityConfiguration {
     @Bean
     public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
         http
+                .cors(withDefaults())
                 .csrf(csrf -> csrf.disable())
                 .authorizeHttpRequests(authorize -> authorize
+                        .requestMatchers(HttpMethod.OPTIONS, "/**").permitAll()
                         .requestMatchers("/auth/**").permitAll()
                         .requestMatchers("/timetable/**").permitAll()
                         .requestMatchers("/trains/**").permitAll()
